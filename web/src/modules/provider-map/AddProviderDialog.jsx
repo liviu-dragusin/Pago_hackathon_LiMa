@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 import { Button, useToast } from '../../components/ui'
+import ProviderLogo from './ProviderLogo'
 import { api } from '../../lib/api'
 import { category } from '../../lib/format'
 
@@ -60,12 +61,15 @@ export default function AddProviderDialog({ provider, mode, county, catalog, def
         className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-surface p-6 shadow-xl sm:rounded-2xl"
       >
         <div className="mb-5 flex items-start justify-between gap-4">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-brand-600">
-              {mode === 'account' ? 'Adaugă cont pentru plată' : 'Cerere contract nou'}
-            </p>
-            <h2 className="mt-1 text-lg font-bold">{provider.name}</h2>
-            <p className="text-sm text-slate-500">Județul {county.name}</p>
+          <div className="flex min-w-0 items-center gap-3">
+            <ProviderLogo logo={provider.logo} cat={provider.categories[0]} className="h-12 w-12" />
+            <div className="min-w-0">
+              <p className="text-xs font-medium uppercase tracking-wide text-brand-600">
+                {mode === 'account' ? 'Adaugă cont pentru plată' : 'Cerere contract nou'}
+              </p>
+              <h2 className="mt-1 text-lg font-bold">{provider.name}</h2>
+              <p className="text-sm text-slate-500">Județul {county.name}</p>
+            </div>
           </div>
           <button type="button" onClick={onClose} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100">
             <X className="h-5 w-5" />

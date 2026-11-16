@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { Home, Mail, MapPinPlus, Moon, PieChart, Receipt, Sun, Trophy, Users } from 'lucide-react'
 import { useTheme } from '../lib/theme'
+import { Assistant } from '../modules/assistant'
 
 const NAV = [
   { to: '/', label: 'Acasă', icon: Home, end: true },
@@ -15,6 +16,8 @@ const NAV = [
 export default function Layout() {
   return (
     <div className="min-h-screen lg:pl-64">
+      <Assistant />
+
       {/* Sidebar desktop */}
       <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-slate-200 bg-surface px-4 py-6 lg:flex">
         <Logo />
@@ -66,11 +69,11 @@ export default function Layout() {
             to={to}
             end={end}
             className={({ isActive }) =>
-              `flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium ${isActive ? 'text-brand-600' : 'text-slate-500'}`
+              `flex min-w-0 flex-col items-center gap-0.5 px-0.5 py-2 text-[10px] font-medium ${isActive ? 'text-brand-600' : 'text-slate-500'}`
             }
           >
             <Icon className="h-5 w-5" />
-            {short ?? label}
+            <span className="w-full truncate text-center">{short ?? label}</span>
           </NavLink>
         ))}
       </nav>

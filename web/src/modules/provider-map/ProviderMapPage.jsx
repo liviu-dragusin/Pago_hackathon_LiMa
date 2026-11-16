@@ -1,15 +1,50 @@
-import { useMemo, useState } from 'react'
-import { CheckCircle2, FileSignature, Home, MapPin, Plus, Search, Zap } from 'lucide-react'
-import { Button, Card, CardTitle, CategoryIcon, ErrorBox, Loading, PageHeader } from '../../components/ui'
+import { useMemo, useRef, useState } from 'react'
+import {
+  ArrowLeft,
+  ArrowRight,
+  Building2,
+  Check,
+  CheckCircle2,
+  Droplets,
+  FileSignature,
+  Flame,
+  Home,
+  MapPin,
+  Package,
+  Plus,
+  Search,
+  Trash2,
+  Tv,
+  Zap,
+} from 'lucide-react'
+import { Card, CardTitle, CategoryIcon, ErrorBox, Loading } from '../../components/ui'
 import { api, useApi } from '../../lib/api'
 import { category, shortDate } from '../../lib/format'
 import AddProviderDialog from './AddProviderDialog'
+import ProviderLogo from './ProviderLogo'
 import RomaniaMap from './RomaniaMap'
 
-// Scală secvențială pentru numărul de operatori locali (0 = gri). Valorile sunt în index.css, pe temă.
-const SCALE = ['var(--map-1)', 'var(--map-2)', 'var(--map-3)', 'var(--map-4)', 'var(--map-5)']
-const NONE = 'var(--map-none)'
-const ALL_NATIONAL = 'var(--map-national)'
+/*
+ * Wizard „Adaugă furnizor”, câte un pas pe ecran:
+ *   1. Județul   – alegi pe hartă (sau din listă), apoi Continuă
+ *   2. Serviciul – curent, gaz, apă, TV…; click pe serviciu te duce mai departe
+ *   3. Furnizorul – alegi operatorul și decizi: adaugi contul existent sau ceri contract nou
+ */
+
+const NEUTRAL = 'var(--map-2)'
+const SELECTED = 'var(--poster-yellow)' // județul ales iese în evidență în ambele teme
+
+// Etichete prietenoase pentru serviciile din catalog
+const SERVICES = {
+  energie: { label: 'Curent', icon: Zap },
+  gaz: { label: 'Gaz', icon: Flame },
+  apa: { label: 'Apă', icon: Droplets },
+  comunicatii: { label: 'TV & Internet', icon: Tv },
+  salubrizare: { label: 'Salubrizare', icon: Trash2 },
+  intretinere: { label: 'Întreținere', icon: Building2 },
+  diverse: { label: 'Altele', icon: Package },
+}
+const service = (key) => SERVICES[key] ?? { label: category(key).label, icon: Package }
 
 const CONTRACT_STATUS = {
   trimisa: ['Trimisă', 'bg-slate-100 text-slate-700'],
@@ -18,128 +53,282 @@ const CONTRACT_STATUS = {
   respinsa: ['Respinsă', 'bg-red-50 text-red-700'],
 }
 
+const countyName = (c) => (c.code === 'B' ? 'București' : c.name)
+const countyTitle = (c) => (c.code === 'B' ? 'Municipiul București' : `Județul ${c.name}`)
+
 export default function ProviderMapPage() {
   const { data, loading, error, reload } = useApi(api.catalog)
-  const [cat, setCat] = useState('')
+  const [step, setStep] = useState(1)
   const [countyCode, setCountyCode] = useState(null)
+  const [cat, setCat] = useState('')
+  const [slug, setSlug] = useState(null)
   const [query, setQuery] = useState('')
-  const [hoverSlug, setHoverSlug] = useState(null)
   const [dialog, setDialog] = useState(null) // {provider, mode}
-
-  const selectedCode = countyCode ?? data?.home_county ?? 'B'
+  const decisionRef = useRef(null)
 
   const view = useMemo(() => {
     if (!data) return null
-    const inCat = (p) => !cat || p.categories.includes(cat)
-    const providers = data.providers.filter(inCat)
-    const onlyNational = providers.every((p) => p.coverage === 'national')
+    const county = data.counties.find((c) => c.code === countyCode) ?? null
+    const availableIn = (p, code) => p.coverage === 'national' || p.coverage.includes(code)
 
-    // Culoare pe județ = câți operatori locali (non-naționali) are categoria aleasă acolo
-    const localCount = Object.fromEntries(data.counties.map((c) => [c.code, 0]))
-    providers.forEach((p) => p.coverage !== 'national' && p.coverage.forEach((code) => localCount[code]++))
-    const max = Math.max(1, ...Object.values(localCount))
-    const colors = Object.fromEntries(
-      Object.entries(localCount).map(([code, n]) => [
-        code,
-        onlyNational ? ALL_NATIONAL : n === 0 ? NONE : SCALE[Math.min(SCALE.length - 1, Math.floor(((n - 1) / max) * SCALE.length))],
-      ]),
-    )
+    const colors = Object.fromEntries(data.counties.map((c) => [c.code, NEUTRAL]))
+    if (countyCode) colors[countyCode] = SELECTED
+
+    const serviceCounts = county
+      ? Object.fromEntries(
+          data.categories.map((c) => [c.key, data.providers.filter((p) => p.categories.includes(c.key) && availableIn(p, county.code)).length]),
+        )
+      : {}
 
     const q = query.trim().toLowerCase()
-    const visible = providers.filter(
-      (p) => (p.coverage === 'national' || p.coverage.includes(selectedCode)) && (!q || p.name.toLowerCase().includes(q)),
-    )
+    const operators =
+      county && cat
+        ? data.providers
+            .filter((p) => p.categories.includes(cat) && availableIn(p, county.code) && (!q || p.name.toLowerCase().includes(q)))
+            // operatorii locali întâi: sunt cei specifici zonei
+            .sort((a, b) => (a.coverage === 'national') - (b.coverage === 'national') || a.name.localeCompare(b.name, 'ro'))
+        : []
 
     return {
+      county,
       colors,
-      onlyNational,
-      maxLocal: max,
-      county: data.counties.find((c) => c.code === selectedCode),
-      local: visible.filter((p) => p.coverage !== 'national'),
-      national: visible.filter((p) => p.coverage === 'national'),
+      serviceCounts,
+      operators,
+      selected: data.providers.find((p) => p.slug === slug) ?? null,
       connected: new Set(data.accounts.map((a) => a.slug).filter(Boolean)),
       pending: new Set(data.contracts.filter((c) => ['trimisa', 'in_analiza'].includes(c.status)).map((c) => c.provider_slug)),
     }
-  }, [data, cat, query, selectedCode])
+  }, [data, countyCode, cat, slug, query])
 
   if (loading) return <Loading />
   if (error) return <ErrorBox error={error} />
 
-  const hovered = data.providers.find((p) => p.slug === hoverSlug)
-  const highlight = hovered && hovered.coverage !== 'national' ? hovered.coverage : []
   const canContract = (p) => p.categories.some((c) => data.categories.find((k) => k.key === c)?.contract)
+  const homeCounty = data.counties.find((c) => c.code === data.home_county)
+
+  function goTo(n) {
+    if (n === 1) {
+      setCat('')
+      setSlug(null)
+    }
+    if (n === 2) setSlug(null)
+    setQuery('')
+    setStep(n)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function chooseService(key) {
+    setCat(key)
+    setSlug(null)
+    setQuery('')
+    setStep(3)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function chooseProvider(p) {
+    setSlug(p.slug)
+    if (window.matchMedia?.('(max-width: 1023px)').matches) {
+      requestAnimationFrame(() => decisionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+    }
+  }
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Adaugă furnizor"
-        subtitle="Alege județul pe hartă și vezi furnizorii disponibili în Pago. Conectează un cont existent sau cere un contract nou."
-      />
+    <div className="mx-auto max-w-5xl space-y-6">
+      <header className="space-y-4">
+        <div>
+          <h1 className="text-2xl tracking-tight">Adaugă furnizor</h1>
+          <p className="mt-1 text-sm text-slate-500">Trei pași simpli: unde locuiești, ce serviciu cauți și cu cine vrei să lucrezi.</p>
+        </div>
+        <Stepper step={step} onStep={goTo} county={view.county} cat={cat} />
+      </header>
 
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        <Chip active={!cat} onClick={() => setCat('')}>
-          Toate
-        </Chip>
-        {data.categories.map((c) => (
-          <Chip key={c.key} active={cat === c.key} onClick={() => setCat(c.key)} color={category(c.key).color}>
-            {c.label}
-          </Chip>
-        ))}
-      </div>
+      {/* ───────── Pasul 1: harta ───────── */}
+      {step === 1 && (
+        <WizardCard>
+          <StepTitle n={1} title="Unde locuiești?" subtitle="Apasă pe județul tău pe hartă sau alege-l din listă." />
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
-        <Card className="self-start overflow-hidden p-0">
-          <div className="aspect-[10/7] w-full p-3">
-            <RomaniaMap colors={view.colors} highlight={highlight} selected={selectedCode} home={data.home_county} onSelect={setCountyCode} />
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <select
+              value={countyCode ?? ''}
+              onChange={(e) => setCountyCode(e.target.value || null)}
+              aria-label="Alege județul din listă"
+              className="rounded-full border border-line bg-surface px-4 py-2 text-sm"
+            >
+              <option value="">Alege din listă…</option>
+              {[...data.counties]
+                .sort((a, b) => countyName(a).localeCompare(countyName(b), 'ro'))
+                .map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {countyName(c)}
+                  </option>
+                ))}
+            </select>
+            {homeCounty && countyCode !== homeCounty.code && (
+              <button
+                type="button"
+                onClick={() => setCountyCode(homeCounty.code)}
+                className="flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50"
+              >
+                <Home className="h-4 w-4" /> Județul meu ({countyName(homeCounty)})
+              </button>
+            )}
           </div>
-          <Legend view={view} cat={cat} hovered={hovered} />
-        </Card>
 
-        <div className="min-w-0 space-y-4">
-          <Card>
-            <div className="flex items-start gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
-                <MapPin className="h-5 w-5" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-lg font-bold">
-                  {view.county.code === 'B' ? 'Municipiul București' : `Județul ${view.county.name}`}
-                </p>
-                <p className="text-sm text-slate-500">Regiunea {view.county.region}</p>
-              </div>
-              {data.home_county && selectedCode !== data.home_county && (
-                <Button variant="ghost" className="px-2 py-1 text-xs" onClick={() => setCountyCode(data.home_county)}>
-                  <Home className="h-3.5 w-3.5" /> Județul meu
-                </Button>
+          {/* înălțime limitată, ca butonul „Continuă” să rămână vizibil fără scroll */}
+          <div className="aspect-[10/7] max-h-[min(48vh,540px)] w-full rounded-[20px] bg-surface-2 p-2 sm:p-4">
+            <RomaniaMap colors={view.colors} selected={countyCode} home={data.home_county} onSelect={setCountyCode} />
+          </div>
+
+          <WizardFooter sticky>
+            <div className="min-w-0">
+              {view.county ? (
+                <>
+                  <p className="flex items-center gap-2 font-semibold">
+                    <MapPin className="h-4 w-4 shrink-0 text-[var(--accent)]" />
+                    <span className="truncate">{countyTitle(view.county)}</span>
+                  </p>
+                  <p className="truncate text-xs text-slate-500">
+                    Regiunea {view.county.region} · energie: {view.county.electricity_dso}
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-slate-500">Niciun județ ales încă.</p>
               )}
             </div>
-            <p className="mt-3 flex items-center gap-1.5 text-xs text-slate-500">
-              <Zap className="h-3.5 w-3.5 text-amber-500" /> Distribuitor energie electrică: {view.county.electricity_dso}
-            </p>
-            <div className="relative mt-4">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Caută furnizor…"
-                className="w-full rounded-xl border border-slate-200 py-2 pl-9 pr-3 text-sm focus:border-brand-500 focus:outline-none"
+            <PrimaryButton disabled={!view.county} onClick={() => goTo(2)}>
+              Continuă <ArrowRight className="h-4 w-4" />
+            </PrimaryButton>
+          </WizardFooter>
+        </WizardCard>
+      )}
+
+      {/* ───────── Pasul 2: serviciul ───────── */}
+      {step === 2 && view.county && (
+        <WizardCard>
+          <StepTitle n={2} title={`Ce serviciu cauți în ${countyName(view.county)}?`} subtitle="Alege serviciul și îți arătăm furnizorii disponibili." />
+
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+            {data.categories.map((c) => {
+              const n = view.serviceCounts[c.key] ?? 0
+              const { label, icon: Icon } = service(c.key)
+              return (
+                <button
+                  key={c.key}
+                  type="button"
+                  disabled={n === 0}
+                  onClick={() => chooseService(c.key)}
+                  className="group flex flex-col items-start gap-4 rounded-[20px] border border-line bg-surface-2 p-5 text-left transition hover:-translate-y-0.5 hover:border-brand-300 hover:bg-brand-50 hover:shadow-[var(--shadow)] disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:translate-y-0 disabled:hover:border-line disabled:hover:bg-surface-2 disabled:hover:shadow-none"
+                >
+                  <span
+                    className="flex h-12 w-12 items-center justify-center rounded-[14px] text-white"
+                    style={{ backgroundColor: category(c.key).color }}
+                  >
+                    <Icon className="h-6 w-6" />
+                  </span>
+                  <span className="w-full">
+                    <span className="flex items-center justify-between gap-2 font-semibold">
+                      {label}
+                      <ArrowRight className="h-4 w-4 text-slate-400 opacity-0 transition group-hover:translate-x-0.5 group-hover:opacity-100" />
+                    </span>
+                    <span className="block text-xs text-slate-500">
+                      {n === 0 ? 'Niciun furnizor aici' : `${n} ${n === 1 ? 'furnizor' : 'furnizori'}`}
+                    </span>
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+
+          <WizardFooter>
+            <BackButton onClick={() => goTo(1)}>Alt județ</BackButton>
+            <span className="text-xs text-slate-500">Pasul 2 din 3</span>
+          </WizardFooter>
+        </WizardCard>
+      )}
+
+      {/* ───────── Pasul 3: furnizorul și decizia ───────── */}
+      {step === 3 && view.county && cat && (
+        <WizardCard>
+          <StepTitle
+            n={3}
+            title={`Alege furnizorul de ${service(cat).label.toLowerCase()}`}
+            subtitle={`${view.operators.length} ${view.operators.length === 1 ? 'furnizor disponibil' : 'furnizori disponibili'} în ${countyName(view.county)}`}
+          />
+
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+            <div className="min-w-0">
+              <label className="relative mb-3 block">
+                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Caută furnizor…"
+                  className="w-full rounded-full border border-line bg-surface py-2.5 pl-10 pr-4 text-sm focus:border-brand-500 focus:outline-none"
+                />
+              </label>
+
+              {view.operators.length === 0 ? (
+                <p className="rounded-[16px] border border-dashed border-slate-300 px-4 py-8 text-center text-sm text-slate-500">
+                  Niciun furnizor nu se potrivește cu „{query}”.
+                </p>
+              ) : (
+                <ul className="space-y-2 lg:max-h-[460px] lg:overflow-y-auto lg:pr-1" role="radiogroup" aria-label="Furnizori">
+                  {view.operators.map((p) => {
+                    const active = slug === p.slug
+                    return (
+                      <li key={p.slug}>
+                        <button
+                          type="button"
+                          role="radio"
+                          aria-checked={active}
+                          onClick={() => chooseProvider(p)}
+                          className={`flex w-full items-center gap-3 rounded-[16px] border p-3 text-left transition ${
+                            active ? 'border-brand-500 bg-brand-50 ring-2 ring-brand-200' : 'border-line hover:border-brand-300 hover:bg-slate-50'
+                          }`}
+                        >
+                          <ProviderLogo logo={p.logo} cat={p.categories[0]} className="h-11 w-11" />
+                          <span className="min-w-0 flex-1">
+                            <span className="flex items-center gap-1.5 font-semibold">
+                              <span className="truncate">{p.name}</span>
+                              {view.connected.has(p.slug) && <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />}
+                            </span>
+                            <span className="block truncate text-xs text-slate-500">
+                              {p.coverage === 'national' ? 'Disponibil în toată țara' : p.area ?? `Operator local · ${countyName(view.county)}`}
+                            </span>
+                          </span>
+                          <span
+                            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                              active ? 'border-brand-600 bg-brand-600 text-white' : 'border-slate-300'
+                            }`}
+                          >
+                            {active && <Check className="h-3 w-3" />}
+                          </span>
+                        </button>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+            </div>
+
+            <div ref={decisionRef} className="scroll-mt-20 lg:sticky lg:top-6 lg:self-start">
+              <Decision
+                provider={view.selected}
+                county={view.county}
+                connected={view.selected && view.connected.has(view.selected.slug)}
+                pending={view.selected && view.pending.has(view.selected.slug)}
+                canContract={view.selected && canContract(view.selected)}
+                onChoose={(mode) => setDialog({ provider: view.selected, mode })}
               />
             </div>
-          </Card>
+          </div>
 
-          <ProviderSection
-            title={`Operatori locali (${view.local.length})`}
-            empty={cat && !view.onlyNational ? `Niciun operator local de ${category(cat).label.toLowerCase()} în Pago pentru acest județ.` : null}
-            providers={view.local}
-            {...{ view, canContract, setHoverSlug, setDialog }}
-          />
-          <ProviderSection
-            title={`Disponibili în toată țara (${view.national.length})`}
-            providers={view.national}
-            {...{ view, canContract, setHoverSlug, setDialog }}
-          />
-        </div>
-      </div>
+          <WizardFooter>
+            <BackButton onClick={() => goTo(2)}>Alt serviciu</BackButton>
+            <span className="text-xs text-slate-500">Pasul 3 din 3</span>
+          </WizardFooter>
+        </WizardCard>
+      )}
 
       {data.contracts.length > 0 && (
         <Card>
@@ -153,7 +342,7 @@ export default function ProviderMapPage() {
                   <CategoryIcon cat={c.category} size="sm" />
                   <div className="min-w-0 flex-1">
                     <p className="font-medium">
-                      {c.provider_name} <span className="font-normal text-slate-500">· {category(c.category).label}</span>
+                      {c.provider_name} <span className="font-normal text-slate-500">· {service(c.category).label}</span>
                     </p>
                     <p className="truncate text-xs text-slate-500">
                       {c.locality}, {county?.name} · {c.address} · trimisă {shortDate(c.created_at)}
@@ -185,100 +374,184 @@ export default function ProviderMapPage() {
   )
 }
 
-function ProviderSection({ title, providers, empty, view, canContract, setHoverSlug, setDialog }) {
-  if (!providers.length && !empty) return null
+/* ───────── piese de wizard ───────── */
+
+function Stepper({ step, onStep, county, cat }) {
+  const steps = [
+    { label: 'Județul', value: county ? countyName(county) : null },
+    { label: 'Serviciul', value: cat ? service(cat).label : null },
+    { label: 'Furnizorul', value: null },
+  ]
   return (
-    <Card className="p-0">
-      <p className="border-b border-slate-100 px-5 py-3 text-sm font-semibold text-slate-700">{title}</p>
-      {providers.length === 0 ? (
-        <p className="px-5 py-6 text-center text-sm text-slate-500">{empty}</p>
-      ) : (
-        <ul className="max-h-[420px] divide-y divide-slate-100 overflow-y-auto">
-          {providers.map((p) => (
-            <li
-              key={p.slug}
-              onMouseEnter={() => setHoverSlug(p.slug)}
-              onMouseLeave={() => setHoverSlug(null)}
-              className="flex items-center gap-3 px-5 py-3 hover:bg-slate-50"
+    <ol className="grid grid-cols-3 gap-2">
+      {steps.map((s, i) => {
+        const n = i + 1
+        const done = n < step
+        const current = n === step
+        return (
+          <li key={s.label}>
+            <button
+              type="button"
+              disabled={!done}
+              onClick={() => onStep(n)}
+              className={`flex w-full items-center gap-2 rounded-[16px] border px-2 py-2 text-left transition sm:gap-2.5 sm:px-3 sm:py-2.5 ${
+                current
+                  ? 'border-brand-500 bg-surface shadow-[var(--shadow)]'
+                  : done
+                    ? 'border-line bg-surface hover:border-brand-300'
+                    : 'border-transparent bg-slate-100'
+              }`}
             >
-              <CategoryIcon cat={p.categories[0]} size="sm" />
-              <div className="min-w-0 flex-1">
-                <p className="flex items-center gap-1.5 font-medium leading-snug">
-                  {p.name}
-                  {view.connected.has(p.slug) && <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" title="Ai deja un cont conectat" />}
-                </p>
-                <p className="truncate text-xs text-slate-500">
-                  {[p.categories.map((c) => category(c).label).join(' + '), p.area ?? p.kind].filter(Boolean).join(' · ')}
-                  {view.pending.has(p.slug) && <span className="text-amber-600"> · cerere în curs</span>}
-                </p>
-              </div>
-              <div className="flex shrink-0 gap-1">
-                {canContract(p) && (
-                  <Button variant="secondary" className="px-2.5 py-1.5" title="Cerere contract nou" onClick={() => setDialog({ provider: p, mode: 'contract' })}>
-                    <FileSignature className="h-4 w-4" />
-                    <span className="hidden 2xl:inline">Contract</span>
-                  </Button>
-                )}
-                <Button className="px-2.5 py-1.5" title="Adaugă cont pentru plată" onClick={() => setDialog({ provider: p, mode: 'account' })}>
-                  <Plus className="h-4 w-4" />
-                  <span className="hidden 2xl:inline">Adaugă</span>
-                </Button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-    </Card>
+              <span
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                  current ? 'bg-brand-600 text-white' : done ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-200 text-slate-500'
+                }`}
+              >
+                {done ? <Check className="h-3.5 w-3.5" /> : n}
+              </span>
+              <span className="min-w-0">
+                <span className={`hidden text-[11px] font-semibold uppercase tracking-wider sm:block ${current ? 'text-[var(--accent)]' : 'text-slate-500'}`}>
+                  Pasul {n}
+                </span>
+                <span className={`block truncate text-xs font-semibold sm:text-sm ${current || done ? '' : 'text-slate-400'}`}>
+                  {done && s.value ? s.value : s.label}
+                </span>
+              </span>
+            </button>
+          </li>
+        )
+      })}
+    </ol>
   )
 }
 
-function Legend({ view, cat, hovered }) {
+function WizardCard({ children }) {
+  return <section className="rounded-[24px] border border-line bg-surface p-5 shadow-[var(--shadow)] sm:p-7">{children}</section>
+}
+
+function StepTitle({ n, title, subtitle }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-slate-100 px-5 py-3 text-xs text-slate-600">
-      {hovered ? (
-        <span className="flex items-center gap-2">
-          <Swatch color="var(--map-highlight)" /> Zona acoperită de {hovered.name}
-          {hovered.coverage === 'national' && ' (toată țara)'}
-        </span>
-      ) : view.onlyNational ? (
-        <span className="flex items-center gap-2">
-          <Swatch color={ALL_NATIONAL} /> {cat ? category(cat).label : 'Furnizorii'} disponibili în toate județele
-        </span>
-      ) : (
-        <>
-          <span className="flex items-center gap-2">
-            Operatori locali{cat ? ` de ${category(cat).label.toLowerCase()}` : ''}:
-            {SCALE.map((c) => (
-              <Swatch key={c} color={c} />
-            ))}
-            <span>1 → {view.maxLocal}</span>
-          </span>
-          <span className="flex items-center gap-2">
-            <Swatch color={NONE} /> niciunul în Pago
-          </span>
-        </>
-      )}
-      <span className="flex items-center gap-2">
-        <span className="h-0 w-5 border-t-2 border-dashed border-ink" /> județul tău
-      </span>
+    <div className="mb-5">
+      <p className="text-xs font-semibold uppercase tracking-wider text-[var(--accent)]">Pasul {n} din 3</p>
+      <h2 className="mt-1 text-[clamp(20px,2.6vw,26px)] leading-tight">{title}</h2>
+      {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
     </div>
   )
 }
 
-function Swatch({ color }) {
-  return <span className="inline-block h-3 w-3 rounded-sm" style={{ backgroundColor: color }} />
-}
-
-function Chip({ active, onClick, color, children }) {
+// sticky: pe mobil butonul principal rămâne vizibil deasupra meniului de jos
+function WizardFooter({ children, sticky = false }) {
   return (
-    <button
-      onClick={onClick}
-      className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition ${
-        active ? 'bg-brand-600 text-white' : 'bg-surface text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
+    <div
+      className={`mt-6 flex items-center justify-between gap-4 border-t border-line pt-5 ${
+        sticky ? 'sticky bottom-16 z-10 -mx-5 bg-surface px-5 pb-4 sm:-mx-7 sm:px-7 lg:static lg:mx-0 lg:px-0 lg:pb-0' : ''
       }`}
     >
-      {color && <span className="h-2 w-2 rounded-full" style={{ backgroundColor: active ? '#fff' : color }} />}
       {children}
+    </div>
+  )
+}
+
+function PrimaryButton({ children, ...props }) {
+  return (
+    <button
+      type="button"
+      {...props}
+      className="flex shrink-0 items-center gap-2 rounded-full bg-brand-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand-600/90 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
+    >
+      {children}
+    </button>
+  )
+}
+
+function BackButton({ children, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex items-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-semibold text-slate-600 ring-1 ring-line transition hover:bg-slate-50"
+    >
+      <ArrowLeft className="h-4 w-4" /> {children}
+    </button>
+  )
+}
+
+function Decision({ provider, county, connected, pending, canContract, onChoose }) {
+  if (!provider) {
+    return (
+      <div className="flex h-full min-h-[200px] flex-col items-center justify-center rounded-[20px] border border-dashed border-slate-300 bg-surface-2 px-6 py-10 text-center">
+        <span className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-brand-50 text-brand-600">
+          <Building2 className="h-6 w-6" />
+        </span>
+        <p className="mt-3 font-semibold">Alege un furnizor</p>
+        <p className="mt-1 text-sm text-slate-500">Apoi decizi: adaugi contul pe care îl ai deja sau ceri un contract nou.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="rounded-[20px] border border-line bg-surface-2 p-5">
+      <div className="flex items-center gap-3">
+        <ProviderLogo logo={provider.logo} cat={provider.categories[0]} className="h-12 w-12" />
+        <div className="min-w-0">
+          <p className="truncate text-lg font-bold">{provider.name}</p>
+          <p className="truncate text-xs text-slate-500">
+            {provider.categories.map((c) => service(c).label).join(' + ')} ·{' '}
+            {provider.coverage === 'national' ? 'toată țara' : countyName(county)}
+          </p>
+        </div>
+      </div>
+
+      {(connected || pending) && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {connected && <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">Ai deja un cont conectat</span>}
+          {pending && <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">Cerere de contract în curs</span>}
+        </div>
+      )}
+
+      <p className="mt-5 text-sm font-semibold">Ce vrei să faci?</p>
+      <div className="mt-2 space-y-2">
+        <DecisionOption
+          icon={Plus}
+          title="Am deja contract"
+          text="Adaug codul de client și plătesc facturile din Pago."
+          onClick={() => onChoose('account')}
+          primary
+        />
+        {canContract && (
+          <DecisionOption
+            icon={FileSignature}
+            title="Vreau contract nou"
+            text={`Trimit o cerere către ${provider.name} pentru adresa mea.`}
+            onClick={() => onChoose('contract')}
+          />
+        )}
+      </div>
+    </div>
+  )
+}
+
+function DecisionOption({ icon: Icon, title, text, onClick, primary = false }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`group flex w-full items-center gap-3 rounded-[16px] p-3.5 text-left transition hover:-translate-y-0.5 ${
+        primary ? 'bg-brand-600 text-white hover:bg-brand-600/90' : 'border border-line bg-surface hover:border-brand-300'
+      }`}
+    >
+      <span
+        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] ${
+          primary ? 'bg-white/20 text-white' : 'bg-brand-50 text-brand-600'
+        }`}
+      >
+        <Icon className="h-5 w-5" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block font-semibold">{title}</span>
+        <span className={`block text-xs ${primary ? 'text-white/80' : 'text-slate-500'}`}>{text}</span>
+      </span>
+      <ArrowRight className={`h-4 w-4 shrink-0 transition group-hover:translate-x-0.5 ${primary ? 'text-white' : 'text-slate-400'}`} />
     </button>
   )
 }

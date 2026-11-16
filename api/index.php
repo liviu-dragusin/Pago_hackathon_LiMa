@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/helpers.php';
 require_once __DIR__ . '/lib/rewards.php';
 require_once __DIR__ . '/lib/predict.php';
+require_once __DIR__ . '/lib/weather.php';
 require_once __DIR__ . '/lib/db.php';
 require_once __DIR__ . '/lib/handlers.php';
 require_once __DIR__ . '/lib/catalog.php';

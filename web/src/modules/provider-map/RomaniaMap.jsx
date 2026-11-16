@@ -75,7 +75,7 @@ export default function RomaniaMap({ colors = {}, highlight = [], selected, home
             textAnchor="middle"
             dominantBaseline="central"
             pointerEvents="none"
-            className={`select-none text-[11px] font-semibold ${c.code === selected ? 'fill-brand-900' : 'fill-slate-700/70'}`}
+            className={`select-none text-[11px] font-semibold ${c.code === selected ? 'fill-[#161F28] text-[13px] font-extrabold' : 'fill-slate-700/70'}`}
           >
             {c.code}
           </text>
