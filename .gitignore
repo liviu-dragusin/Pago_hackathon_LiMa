@@ -1,10 +1,11 @@
-config.json
-data/app.sqlite
-data/app.sqlite-*
-data/*.log
 node_modules/
-frontend/dist/
+web/dist/
+api/data/*.sqlite
+api/data/*.sqlite-journal
+.env
+.DS_Store
+
+# Python (scripturile din modules/gmail-import)
 __pycache__/
 *.pyc
-.env
 .venv/

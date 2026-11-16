@@ -1,0 +1,164 @@
+@import "tailwindcss";
+
+/*
+ * Design: .hackathon-pulse/DESIGN.md.
+ * Tema stă pe <html data-theme="light|dark">: o setează scriptul din index.html (înainte de randare)
+ * și lib/theme.jsx (comutatorul). Implicit urmează sistemul, iar alegerea userului se ține minte.
+ * Paleta Tailwind (slate, brand, culorile de status) e remapată pe tokenii design-ului,
+ * deci clasele existente (bg-slate-50, text-slate-500, border-slate-200…) urmează tema automat.
+ */
+
+:root {
+  color-scheme: light;
+  --ground: #EFF2F7;
+  --surface: #FFFFFF;
+  --surface-2: #F7F8FB;
+  --ink: #161F28;
+  --muted: #5A6B8F;
+  --line: #DFE6F6;
+  --accent: #2B59C3;
+  --accent-soft: #E6F0FF;
+  --shadow: 0 0 1.4px rgba(24, 24, 27, 0.3), 0 5.6px 11.2px rgba(24, 24, 27, 0.1);
+
+  /* poster: la fel în ambele teme */
+  --poster-a: #2A56D4;
+  --poster-b: #1E43B8;
+  --poster-yellow: #FFD54A;
+
+  /* harta furnizorilor: scală secvențială + gol + toate județele */
+  --map-1: #E6F0FF;
+  --map-2: #B3CCFA;
+  --map-3: #7FA2F5;
+  --map-4: #2B59C3;
+  --map-5: #1E43B8;
+  --map-none: #DFE6F6;
+  --map-national: #B3CCFA;
+  --map-highlight: #F59E0B;
+}
+
+@theme {
+  --font-sans: "Poppins", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* culori semantice: bg-surface, text-ink, text-muted, border-line, … */
+  --color-ground: var(--ground);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+
+  /* slate → tokenii design-ului (light) */
+  --color-slate-50: #F7F8FB;
+  --color-slate-100: #EEF2FA;
+  --color-slate-200: #DFE6F6;
+  --color-slate-300: #C9D3E8;
+  --color-slate-400: #8A99B8;
+  --color-slate-500: #5A6B8F;
+  --color-slate-600: #4A5A7C;
+  --color-slate-700: #33415C;
+  --color-slate-800: #222C3D;
+  --color-slate-900: #161F28;
+
+  --color-brand-50: #E6F0FF;
+  --color-brand-100: #D6E4FF;
+  --color-brand-200: #B3CCFA;
+  --color-brand-300: #8FB1F0;
+  --color-brand-500: #2A56D4;
+  --color-brand-600: #2B59C3;
+  --color-brand-700: #1E43B8;
+  --color-brand-900: #1A2747;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ground: #0E131A;
+  --surface: #171D26;
+  --surface-2: #1D2430;
+  --ink: #E6EAF2;
+  --muted: #94A3BD;
+  --line: #2A3240;
+  --accent: #7FA2F5;
+  --accent-soft: #1A2747;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+
+  --map-1: #1A2747;
+  --map-2: #22397A;
+  --map-3: #2F51AD;
+  --map-4: #4F78DA;
+  --map-5: #7FA2F5;
+  --map-none: #2A3240;
+  --map-national: #2F51AD;
+  --map-highlight: #FFD54A;
+
+  --color-slate-50: #1D2430;
+  --color-slate-100: #232B38;
+  --color-slate-200: #2A3240;
+  --color-slate-300: #3A4456;
+  --color-slate-400: #6E7D99;
+  --color-slate-500: #94A3BD;
+  --color-slate-600: #A9B6CC;
+  --color-slate-700: #C3CCDC;
+  --color-slate-800: #D6DCE8;
+  --color-slate-900: #E6EAF2;
+
+  --color-brand-50: #1A2747;
+  --color-brand-100: #22325A;
+  --color-brand-200: #2C4170;
+  --color-brand-300: #4A66A8;
+  --color-brand-500: #7FA2F5;
+  --color-brand-600: #4F78DA;
+  --color-brand-700: #9DB8F7;
+  --color-brand-900: #C9D8FF;
+
+  /* culori de status: fundaluri închise, text deschis */
+  --color-red-50: #3A1D20;
+  --color-red-200: #5C2A2E;
+  --color-red-600: #F07A72;
+  --color-red-700: #F59A93;
+  --color-red-800: #F8B4AE;
+  --color-amber-50: #3A2E12;
+  --color-amber-200: #5E4A1A;
+  --color-amber-600: #E7B04A;
+  --color-amber-700: #F0C46A;
+  --color-amber-800: #F3CF85;
+  --color-amber-900: #F7DDA6;
+  --color-emerald-50: #12302A;
+  --color-emerald-200: #1F4D40;
+  --color-emerald-600: #4CC29A;
+  --color-emerald-700: #6FD3B0;
+  --color-orange-50: #3A2414;
+}
+
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1 { font-weight: 800; }
+h2 { font-weight: 700; }
+h3 { font-weight: 600; }
+
+/* Recharts: grila, axele și tooltip-ul urmează tema (CSS bate atributele SVG). */
+.recharts-cartesian-grid line,
+.recharts-cartesian-axis-line,
+.recharts-cartesian-axis-tick-line {
+  stroke: var(--line);
+}
+.recharts-cartesian-axis-tick-value {
+  fill: var(--muted);
+}
+.recharts-default-tooltip {
+  background-color: var(--surface) !important;
+  border-color: var(--line) !important;
+  border-radius: 12px;
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+.recharts-legend-item-text {
+  color: var(--muted) !important;
+}
