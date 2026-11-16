@@ -6,6 +6,7 @@
 ## Branches and pull requests
 - Never push directly to `main`.
 - Create a separate branch for each implementation, then open a pull request into `main`.
+- After a commit and push, give the user the link to create the pull request manually, in the form `https://github.com/<owner>/<repo>/compare/main...<branch>?expand=1`. Take owner and repo from `git remote get-url origin`. Add a suggested title and description.
 - Do not merge the pull request yourself. The merge is done manually by a team member.
 
 ## Commits
