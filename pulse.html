@@ -42,48 +42,48 @@ footer{text-align:center;color:var(--muted);font-size:.8rem;margin-top:24px}
  "team": "LiMa",
  "teamPage": "https://claude.ai/artifact/NJN7oaCWnaJC51f6Um5dbW",
  "language": "Romanian",
- "goal": "Demo funcțional și cod până marți la 14:00, construite cu Claude",
+ "goal": "Demo funcțional plus cod până marți la 14:00, construit cu Claude",
  "hoursLeft": 26.5,
  "tick": 1,
- "updatedAt": "16.11.2026, 11:31",
+ "updatedAt": "16.11.2026, 11:32",
  "startedAt": "16.11.2026, 11:30",
- "oneLiner": "Încă nu se știe ce construiește echipa; abia a început.",
- "analogy": "E ca o echipă care tocmai a deschis cutia de LEGO, încă fără piese puse.",
+ "oneLiner": "Încă nu se vede ce construiește echipa; abia a început.",
+ "analogy": "E ca o echipă la linia de start: pantofii sunt legați, dar cursa nu a pornit.",
  "building": {
-  "problem": "Încă nedefinită",
-  "idea": "Încă nedefinită",
-  "demo": "Nu există încă nimic de arătat",
+  "problem": "Încă necunoscută: nu există prompturi sau commituri.",
+  "idea": "Încă nu este aleasă în date.",
+  "demo": "Încă nimic: doar fișierul de notițe al echipei.",
   "stack": []
  },
  "timeline": [
-  {"tick": 1, "at": "16.11.2026, 11:31", "headline": "Startul: o sesiune, un prim mesaj, fără cod încă", "mood": "exploring"}
+  {"tick": 1, "at": "16.11.2026, 11:32", "headline": "Echipa a pornit; Claude a făcut un plan și a rulat o comandă.", "mood": "exploring"}
  ],
  "toolbox": {
-  "prompts": {"count": 1, "names": [], "note": "Un singur mesaj până acum"},
-  "planMode": {"count": 0, "names": [], "note": "Încă nefolosit"},
-  "memory": {"count": 0, "names": [], "note": "Nu există CLAUDE.md"},
-  "skills": {"count": 0, "names": [], "note": "Niciun skill propriu"},
-  "slashCommands": {"count": 0, "names": [], "note": "Nicio comandă folosită"},
-  "subagents": {"count": 0, "names": [], "note": "Niciun ajutor în paralel"},
-  "mcp": {"count": 0, "names": [], "note": "Niciun conector la date reale"},
-  "hooks": {"count": 0, "names": [], "note": "Niciun hook"},
-  "loopsGoals": {"count": 0, "names": [], "note": "Niciun loop sau goal"},
-  "workflows": {"count": 0, "names": [], "note": "Niciun workflow"},
-  "artifacts": {"count": 0, "names": [], "note": "Nicio pagină de demo"}
+  "prompts": {"count": 0, "names": [], "note": "Nu s-a văzut niciun prompt încă."},
+  "planMode": {"count": 0, "names": [], "note": "Nu s-a folosit modul plan."},
+  "memory": {"count": 0, "names": [], "note": "CLAUDE.md are 0 linii."},
+  "skills": {"count": 0, "names": [], "note": "Nicio abilitate proprie."},
+  "slashCommands": {"count": 0, "names": [], "note": "Nicio comandă proprie."},
+  "subagents": {"count": 0, "names": [], "note": "Niciun ajutor Claude folosit."},
+  "mcp": {"count": 0, "names": [], "note": "Niciun conector la servicii reale."},
+  "hooks": {"count": 0, "names": [], "note": "Nicio cârlig configurat."},
+  "loopsGoals": {"count": 0, "names": [], "note": "Fără /loop sau /goal."},
+  "workflows": {"count": 0, "names": [], "note": "Fără workflow-uri."},
+  "artifacts": {"count": 0, "names": [], "note": "Pagina echipei există, dar nicio pagină demo."}
  },
- "level": {"current": 0, "target": 3, "why": "Doar un prompt și o listă de pași; nicio regulă, verificare sau commit încă."},
- "direction": {"heading": "Alegeți ideea și faceți primul pas", "status": "on-track", "why": "Abia a început; sunt 26 de ore, deci există timp să alegeți clar."},
+ "level": {"current": 0, "target": 3, "why": "Doar 3 apeluri de unelte; nicio memorie, test sau commit încă."},
+ "direction": {"heading": "Alegerea ideii și primul demo mic", "status": "on-track", "why": "Au 26 de ore; start-ul e normal, dar ținta trebuie fixată repede."},
  "nextMoves": [
-  {"title": "Scrieți regulile echipei", "why": "Claude le ține minte în fiecare sesiune.", "tryThis": "/init"},
-  {"title": "Planificați înainte de a construi", "why": "Un plan clar evită munca aruncată.", "tryThis": "Shift+Tab pentru plan mode: «Planifică demo-ul în 3 pași, apoi construiește»"},
-  {"title": "Cereți verificarea", "why": "Un demo care merge bate un demo frumos.", "tryThis": "Rulează aplicația și arată-mi că merge înainte să spui gata"}
+  {"title": "Scrie ținta în CLAUDE.md", "why": "Claude ține minte ce construiți și regulile voastre.", "tryThis": "/init, apoi adaugă: ținta demo-ului, stack-ul și 3 reguli ale echipei."},
+  {"title": "Planifică înainte să construiești", "why": "Un plan aprobat evită ore pierdute pe drum greșit.", "tryThis": "Shift+Tab pentru modul plan: \"planifică cel mai mic demo care merge până diseară\"."},
+  {"title": "Cere verificare la fiecare pas", "why": "Așa demo-ul chiar merge, nu doar pare gata.", "tryThis": "\"Rulează aplicația și arată-mi că merge înainte să spui gata.\""}
  ],
- "wins": ["Echipa a pornit repede și a folosit o listă de pași chiar din primul minut."],
- "risks": ["Nu există încă idee scrisă, CLAUDE.md sau commit; timpul trece."],
+ "wins": ["Au pornit devreme, cu 26 de ore în față.", "Claude a folosit o listă de pași chiar de la început."],
+ "risks": ["Fără CLAUDE.md și fără idee clară, Claude poate merge în direcții diferite."],
  "glossary": [
-  {"term": "subagent", "plain": "un Claude ajutor care lucrează în camera lui și vine cu rezultatul"},
-  {"term": "CLAUDE.md", "plain": "un caiet de reguli pe care Claude îl citește mereu"},
-  {"term": "plan mode", "plain": "Claude gândește și face planul înainte să atingă codul"}
+  {"term": "CLAUDE.md", "plain": "un carnet cu reguli pe care Claude îl citește mereu"},
+  {"term": "mod plan", "plain": "Claude gândește și arată planul înainte să schimbe ceva"},
+  {"term": "subagent", "plain": "un Claude ajutor care lucrează în camera lui și raportează înapoi"}
  ]
 }
 </script>
