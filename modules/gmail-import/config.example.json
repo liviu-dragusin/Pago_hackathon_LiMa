@@ -1,0 +1,11 @@
+{
+  "google": {
+    "client_id": "",
+    "client_secret": "",
+    "redirect_uri": "http://localhost/pago/modules/gmail-import/backend/public/api/auth/google/callback"
+  },
+  "anthropic_api_key": "",
+  "python_path": "python",
+  "frontend_url": "http://localhost:5173/importa",
+  "demo_email": "demo@pago.local"
+}
