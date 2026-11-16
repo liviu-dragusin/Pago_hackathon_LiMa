@@ -4,3 +4,8 @@ api/data/*.sqlite
 api/data/*.sqlite-journal
 .env
 .DS_Store
+
+# Python (scripturile din modules/gmail-import)
+__pycache__/
+*.pyc
+.venv/
