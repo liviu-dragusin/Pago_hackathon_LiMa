@@ -64,3 +64,45 @@ function auth_google_callback(): void
     $_SESSION['user_id'] = $uid;
     redirect($frontend . '/?auth=ok');
 }
+
+/** GET /api/auth/me – cine e conectat. Răspunde 200 și fără utilizator, ca frontend-ul să nu primească 401 la pornire. */
+function auth_me(): void
+{
+    $uid = (int) ($_SESSION['user_id'] ?? 0);
+    if ($uid === 0) {
+        json_out(['authenticated' => false]);
+    }
+    $stmt = db()->prepare('SELECT email FROM users WHERE id = ?');
+    $stmt->execute([$uid]);
+    $email = $stmt->fetchColumn();
+    if (!$email) {
+        unset($_SESSION['user_id']);
+        json_out(['authenticated' => false]);
+    }
+    json_out([
+        'authenticated' => true,
+        'email' => $email,
+        'demo' => $email === (config()['demo_email'] ?? 'demo@pago.local'),
+    ]);
+}
+
+/** POST /api/auth/demo – conectare cu contul de test, fără Google (pentru demo și dezvoltare). */
+function auth_demo(): void
+{
+    $email = config()['demo_email'] ?? 'demo@pago.local';
+    $pdo = db();
+    $pdo->prepare('INSERT INTO users (email) VALUES (?) ON CONFLICT(email) DO NOTHING')->execute([$email]);
+    $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ?');
+    $stmt->execute([$email]);
+    session_regenerate_id(true);
+    $_SESSION['user_id'] = (int) $stmt->fetchColumn();
+    json_out(['ok' => true]);
+}
+
+/** POST /api/auth/logout – încheie sesiunea. */
+function auth_logout(): void
+{
+    $_SESSION = [];
+    session_destroy();
+    json_out(['ok' => true]);
+}

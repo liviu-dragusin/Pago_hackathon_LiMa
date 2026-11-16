@@ -92,7 +92,7 @@ function poll(root) {
       if (!res.ok) throw new Error(job.error);
       if (job.status === 'done') {
         stopPolling();
-        return showReview(root);
+        return showReview(root, job.error);
       }
       if (job.status === 'error') {
         stopPolling();
@@ -106,7 +106,7 @@ function poll(root) {
   }, 1200);
 }
 
-async function showReview(root) {
+async function showReview(root, note) {
   const res = await fetch(`${API}/providers/discovered?job_id=${jobId}`);
   const { providers } = await res.json();
 
@@ -138,12 +138,15 @@ async function showReview(root) {
         </span>
         ${p.iban && !p.iban_valid ? '<span class="mt-1 block text-xs text-red-600">IBAN-ul din factură nu s-a putut verifica. Confirmă-l înainte de plată.</span>' : ''}
       </span>
+      ${p.has_invoice_pdf ? `<a href="${API}/providers/invoice?id=${p.id}" target="_blank" rel="noopener"
+        class="flex shrink-0 items-center gap-1 self-start rounded-lg px-3 py-2 text-sm font-semibold text-blue-700 ring-1 ring-blue-200 hover:bg-blue-50">Factură PDF</a>` : ''}
     </label>`).join('');
 
   root.innerHTML = shell(`
     ${card(`
       <p class="font-semibold">Am găsit ${providers.length} furnizori în emailurile tale</p>
       <p class="mt-1 text-sm text-slate-600">Bifează-i pe cei pe care vrei să îi adaugi în Pago.</p>
+      ${note ? `<p class="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">${esc(note)}</p>` : ''}
       <div class="mt-4 space-y-2">${rows}</div>
       <button id="confirm" class="mt-5 w-full rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white hover:bg-blue-700">
         Adaugă furnizorii selectați

@@ -18,9 +18,13 @@ $key = $_SERVER['REQUEST_METHOD'] . ' ' . rtrim($route, '/');
 $routes = [
     'GET /auth/google/start'     => 'auth_google_start',
     'GET /auth/google/callback'  => 'auth_google_callback',
+    'GET /auth/me'               => 'auth_me',
+    'POST /auth/demo'            => 'auth_demo',
+    'POST /auth/logout'          => 'auth_logout',
     'POST /scan/start'           => 'scan_start',
     'GET /scan/status'           => 'scan_status',
     'GET /providers/discovered'  => 'providers_discovered',
+    'GET /providers/invoice'     => 'providers_invoice',
     'POST /providers/confirm'    => 'providers_confirm',
 ];
 

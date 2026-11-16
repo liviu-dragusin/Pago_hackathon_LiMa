@@ -162,3 +162,52 @@ h3 { font-weight: 600; }
 .recharts-legend-item-text {
   color: var(--muted) !important;
 }
+
+/* Furnizor detectat în timp real (GmailImportPage): apare cu un mic "pop". */
+@keyframes pago-pop {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+.pago-pop { animation: pago-pop 0.35s ease-out both; }
+
+/* ===== Buton „Detecție automată a furnizorilor”: singurul element în stil AI ===== */
+.ai-btn {
+  position: relative;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  overflow: hidden;
+  padding: 16px 20px;
+  border-radius: 16px;
+  font-weight: 600;
+  color: #fff;
+  text-align: center;
+  cursor: pointer;
+  background: linear-gradient(110deg, #2b59c3, #7c3aed 55%, #06b6d4);
+  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.ai-btn::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -60%;
+  width: 40%;
+  transform: skewX(-20deg);
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  animation: ai-sweep 3.4s ease-in-out infinite;
+}
+.ai-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 38px rgba(99, 102, 241, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+.ai-btn:focus-visible { outline: 2px solid #67e8f9; outline-offset: 3px; }
+
+@keyframes ai-sweep { 0%, 55% { left: -60%; } 100% { left: 130%; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-btn::after { animation: none; }
+}

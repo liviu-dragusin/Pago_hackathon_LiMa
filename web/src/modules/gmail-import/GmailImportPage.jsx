@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { AlertTriangle, CheckCircle2, Mail, ShieldCheck } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, FileText, Mail, ShieldCheck } from 'lucide-react'
 
 // Portat din modules/gmail-import/frontend (vanilla JS) în React, cu aceleași rute API:
 // /api/auth/google/start, /api/scan/start, /api/scan/status, /api/providers/discovered, /api/providers/confirm.
 // Cererile sunt trimise prin Vite proxy (vite.config.js), care le duce la backend-ul modulului.
 
-const AUTH_MESSAGES = {
+export const AUTH_MESSAGES = {
   denied: 'Ai refuzat accesul la Gmail. Poți încerca din nou sau folosi datele demo.',
   state: 'Sesiunea de autorizare a expirat. Încearcă din nou.',
   norefresh: 'Google nu a returnat o autorizare reînnoibilă. Încearcă din nou și acceptă accesul.',
@@ -23,10 +23,12 @@ async function call(path, options = {}) {
   return data
 }
 
-export default function GmailImportPage() {
+// Folosită ca pas de onboarding (modules/auth): `autoStart` ('live' | 'demo') pornește scanarea direct,
+// iar `onExit(completed)` încheie pasul (true = intră în aplicație, false = înapoi la ecranul de bun venit).
+export default function GmailImportPage({ autoStart = null, onExit = null }) {
   const [params, setParams] = useSearchParams()
   // intro | starting | progress | review | empty | done | error
-  const [step, setStep] = useState('intro')
+  const [step, setStep] = useState(autoStart ? 'starting' : 'intro')
   const [jobId, setJobId] = useState(null)
   const [job, setJob] = useState(null)
   const [providers, setProviders] = useState([])
@@ -74,6 +76,12 @@ export default function GmailImportPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Pornit din onboarding: scanarea începe direct, fără pasul de introducere.
+  useEffect(() => {
+    if (autoStart) startScan(autoStart)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Polling pe progresul scanării.
   useEffect(() => {
     if (step !== 'progress' || !jobId) return
@@ -98,7 +106,7 @@ export default function GmailImportPage() {
       }
     }
     tick()
-    const timer = setInterval(tick, 1200)
+    const timer = setInterval(tick, 600)
     return () => {
       cancelled = true
       clearInterval(timer)
@@ -132,6 +140,10 @@ export default function GmailImportPage() {
   }
 
   function restart() {
+    if (onExit) {
+      onExit(false)
+      return
+    }
     setJobId(null)
     setJob(null)
     setProviders([])
@@ -155,6 +167,7 @@ export default function GmailImportPage() {
           onConfirm={confirm}
           busy={busy}
           message={message}
+          onSkip={onExit ? () => onExit(true) : null}
         />
       )}
       {step === 'empty' && (
@@ -173,7 +186,7 @@ export default function GmailImportPage() {
               <p className="mt-1 text-[var(--muted)]">Facturile lor vor apărea în Pago, cu scadențele urmărite automat.</p>
             </div>
           </div>
-          <Action href="/">Mergi la acasă</Action>
+          {onExit ? <Action onClick={() => onExit(true)}>Intră în aplicație</Action> : <Action href="/">Mergi la acasă</Action>}
         </Panel>
       )}
       {step === 'error' && (
@@ -244,20 +257,43 @@ function Progress({ job }) {
   const total = job?.total_emails ?? 0
   const processed = job?.processed ?? 0
   const pct = total ? Math.round((processed * 100) / total) : 0
+  const detected = job?.detected ?? []
   return (
     <Panel>
-      <p className="font-semibold">Caut facturile tale…</p>
-      <div className="mt-4 h-3 w-full overflow-hidden rounded-full bg-[var(--surface-2)]">
-        <div className="h-full rounded-full bg-[var(--accent)] transition-all" style={{ width: `${pct}%` }} />
+      <div className="flex flex-col items-center text-center">
+        <span className="relative flex h-16 w-16 items-center justify-center rounded-full text-[var(--accent)]">
+          <span className="absolute inset-0 animate-ping rounded-full bg-[var(--accent-soft)]" />
+          <span className="relative flex h-16 w-16 items-center justify-center rounded-full bg-[var(--accent-soft)]">
+            <Mail className="h-7 w-7" />
+          </span>
+        </span>
+        <p className="mt-4 font-semibold">Caut facturile tale…</p>
+        <div className="mt-4 h-3 w-full max-w-sm overflow-hidden rounded-full bg-[var(--surface-2)]">
+          <div className="h-full rounded-full bg-[var(--accent)] transition-all" style={{ width: `${pct}%` }} />
+        </div>
+        <p className="mt-3 text-sm text-[var(--muted)]">
+          {processed} din {total} emailuri verificate
+        </p>
+
+        <ul className="mt-5 flex w-full max-w-sm flex-col items-center gap-2" aria-live="polite">
+          {detected.map((d) => (
+            <li
+              key={d.name}
+              className="pago-pop flex w-full items-center justify-center gap-2 rounded-[14px] bg-[var(--surface-2)] px-4 py-2.5 ring-1 ring-[var(--line)]"
+            >
+              <CheckCircle2 className="h-5 w-5 shrink-0 text-[var(--accent)]" />
+              <span className="truncate font-semibold">{d.name}</span>
+              <span className="shrink-0 text-sm text-[var(--muted)]">detectat{d.category ? ` · ${d.category}` : ''}</span>
+            </li>
+          ))}
+        </ul>
+        {detected.length === 0 && <p className="mt-5 text-sm text-[var(--muted)]">Încă niciun furnizor detectat…</p>}
       </div>
-      <p className="mt-3 text-sm text-[var(--muted)]">
-        {processed} din {total} emailuri verificate
-      </p>
     </Panel>
   )
 }
 
-function Review({ providers, selected, onToggle, onConfirm, busy, message }) {
+function Review({ providers, selected, onToggle, onConfirm, busy, message, onSkip }) {
   return (
     <Panel>
       <p className="font-semibold">Am găsit {providers.length} furnizori în emailurile tale</p>
@@ -301,6 +337,20 @@ function Review({ providers, selected, onToggle, onConfirm, busy, message }) {
                 </span>
               )}
             </span>
+            {p.has_invoice_pdf && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  // Butonul e în interiorul <label>: nu vrem să bifeze și checkbox-ul.
+                  e.preventDefault()
+                  e.stopPropagation()
+                  window.open(`/api/providers/invoice?id=${p.id}`, '_blank', 'noopener')
+                }}
+                className="flex shrink-0 items-center gap-1.5 self-start rounded-[10px] bg-[var(--surface-2)] px-3 py-2 text-sm font-semibold text-[var(--accent)] ring-1 ring-[var(--line)] hover:bg-[var(--accent-soft)]"
+              >
+                <FileText className="h-4 w-4" /> Factură PDF
+              </button>
+            )}
           </label>
         ))}
       </div>
@@ -309,6 +359,7 @@ function Review({ providers, selected, onToggle, onConfirm, busy, message }) {
       <Action onClick={onConfirm} disabled={busy || selected.size === 0}>
         {busy ? 'Se salvează…' : `Adaugă furnizorii selectați (${selected.size})`}
       </Action>
+      {onSkip && <Action onClick={onSkip} secondary>Sari peste, intru în aplicație</Action>}
     </Panel>
   )
 }

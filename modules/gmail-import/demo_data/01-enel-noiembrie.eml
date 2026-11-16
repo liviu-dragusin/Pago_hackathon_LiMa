@@ -2,7 +2,11 @@ From: Enel Energie <facturi@enel.ro>
 To: demo@pago.local
 Subject: [DEMO] Factura Enel nr. 4471293 - noiembrie 2026
 Date: Mon, 02 Nov 2026 09:12:00 +0200
-Content-Type: text/plain; charset=utf-8
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============1794331442307191181=="
+
+--===============1794331442307191181==
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
 Stimate client,
@@ -19,3 +23,20 @@ Total de plata: 214,50 RON
 Scadenta: 2026-11-28
 
 Vă mulțumim!
+
+--===============1794331442307191181==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="factura.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjQKMSAwIG9iago8PC9UeXBlL0NhdGFsb2cvUGFnZXMgMiAwIFI+PgplbmRvYmoKMiAw
+IG9iago8PC9UeXBlL1BhZ2VzL0tpZHNbMyAwIFJdL0NvdW50IDE+PgplbmRvYmoKMyAwIG9iago8
+PC9UeXBlL1BhZ2UvUGFyZW50IDIgMCBSL01lZGlhQm94WzAgMCAzMDAgMTQ0XS9Db250ZW50cyA0
+IDAgUi9SZXNvdXJjZXM8PC9Gb250PDwvRjEgNSAwIFI+Pj4+Pj4KZW5kb2JqCjQgMCBvYmoKPDwv
+TGVuZ3RoIDUzPj4Kc3RyZWFtCkJUIC9GMSAxOCBUZiAyMCA2MCBUZCAoRmFjdHVyYSBFbmVsIG5y
+IDQ0NzEyOTMpIFRqIEVUCmVuZHN0cmVhbQplbmRvYmoKNSAwIG9iago8PC9UeXBlL0ZvbnQvU3Vi
+dHlwZS9UeXBlMS9CYXNlRm9udC9IZWx2ZXRpY2E+PgplbmRvYmoKdHJhaWxlcgo8PC9Sb290IDEg
+MCBSPj4KJSVFT0YK
+
+--===============1794331442307191181==--

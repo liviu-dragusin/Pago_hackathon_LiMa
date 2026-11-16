@@ -2,8 +2,12 @@ From: DIGI <facturi@digi.ro>
 To: demo@pago.local
 Subject: [DEMO] Factura DIGI - noiembrie 2026
 Date: Thu, 05 Nov 2026 14:03:00 +0200
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============3114585943428451279=="
+
+--===============3114585943428451279==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
 Furnizor: Digi
 Cod client: 7781120
@@ -11,3 +15,20 @@ Nr. factura: DG-99231
 Categorie: internet
 Total de plata: 39,99 RON
 Scadenta: 2026-11-20
+
+--===============3114585943428451279==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="factura.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjQKMSAwIG9iago8PC9UeXBlL0NhdGFsb2cvUGFnZXMgMiAwIFI+PgplbmRvYmoKMiAw
+IG9iago8PC9UeXBlL1BhZ2VzL0tpZHNbMyAwIFJdL0NvdW50IDE+PgplbmRvYmoKMyAwIG9iago8
+PC9UeXBlL1BhZ2UvUGFyZW50IDIgMCBSL01lZGlhQm94WzAgMCAzMDAgMTQ0XS9Db250ZW50cyA0
+IDAgUi9SZXNvdXJjZXM8PC9Gb250PDwvRjEgNSAwIFI+Pj4+Pj4KZW5kb2JqCjQgMCBvYmoKPDwv
+TGVuZ3RoIDUyPj4Kc3RyZWFtCkJUIC9GMSAxOCBUZiAyMCA2MCBUZCAoRmFjdHVyYSBEaWdpIG5v
+aWVtYnJpZSkgVGogRVQKZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqCjw8L1R5cGUvRm9udC9TdWJ0
+eXBlL1R5cGUxL0Jhc2VGb250L0hlbHZldGljYT4+CmVuZG9iagp0cmFpbGVyCjw8L1Jvb3QgMSAw
+IFI+PgolJUVPRgo=
+
+--===============3114585943428451279==--
