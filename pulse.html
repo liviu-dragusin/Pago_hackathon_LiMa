@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LiMa Pulse</title>
+<style>
+:root{--bg:#f7f5f0;--card:#ffffff;--ink:#1d1b18;--muted:#6b665d;--line:#e3ded3;--accent:#d9622b;--good:#2f8f5b;--warn:#c98a12;--bad:#c2413a;--soft:#f1ece2;--path:#b9ab92}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15140f;--card:#1f1d18;--ink:#f1ede4;--muted:#a69f92;--line:#35322b;--accent:#f08a54;--good:#5cc28a;--warn:#e7b04a;--bad:#ef7a72;--soft:#2a2720;--path:#6f6553}}
+:root[data-theme="dark"]{--bg:#15140f;--card:#1f1d18;--ink:#f1ede4;--muted:#a69f92;--line:#35322b;--accent:#f08a54;--good:#5cc28a;--warn:#e7b04a;--bad:#ef7a72;--soft:#2a2720;--path:#6f6553}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow-x:hidden}
+main{max-width:980px;margin:0 auto;padding:24px 16px 48px}
+h1{font-size:clamp(1.6rem,4.5vw,2.4rem);line-height:1.15;margin:.2em 0}
+h2{font-size:1.15rem;margin:0 0 12px;display:flex;gap:8px;align-items:center}
+h2 .n{background:var(--accent);color:var(--bg);border-radius:50%;width:26px;height:26px;display:inline-grid;place-items:center;font-size:.85rem}
+section{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin:16px 0}
+.muted{color:var(--muted)}.small{font-size:.85rem}
+.pill{display:inline-block;padding:3px 12px;border-radius:999px;font-weight:600;font-size:.85rem;color:var(--bg)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chip{background:var(--soft);border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-size:.82rem}
+.hero{display:grid;grid-template-columns:1fr 200px;gap:16px;align-items:center}
+@media (max-width:640px){.hero{grid-template-columns:1fr}.hero svg{max-width:220px}}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--ink);font-family:inherit}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.tile{border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--soft)}
+.tile.off{opacity:.45}.tile .c{font-size:1.6rem;font-weight:700}.tile .ic{font-size:1.2rem}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media (max-width:640px){.two{grid-template-columns:1fr}}
+.move{border:1px solid var(--line);border-radius:12px;padding:12px;margin:8px 0;background:var(--soft)}
+.try{display:flex;gap:8px;align-items:flex-start;background:var(--card);border:1px dashed var(--accent);border-radius:8px;padding:8px;margin-top:6px;font-family:ui-monospace,Consolas,monospace;font-size:.85rem;word-break:break-word}
+.try span{flex:1}
+button{background:var(--accent);color:var(--bg);border:0;border-radius:6px;padding:4px 10px;cursor:pointer;font-weight:600}
+details summary{cursor:pointer;font-weight:600}
+dl{margin:8px 0}dt{font-weight:600}dd{margin:0 0 8px;color:var(--muted)}
+a{color:var(--accent)}
+footer{text-align:center;color:var(--muted);font-size:.8rem;margin-top:24px}
+</style>
+</head>
+<body>
+<main id="app"><p class="muted">First pulse coming…</p></main>
+<script id="pulse" type="application/json">{
+ "team": "LiMa",
+ "teamPage": "https://claude.ai/artifact/NJN7oaCWnaJC51f6Um5dbW",
+ "language": "Romanian",
+ "goal": "Demo funcțional și cod până marți la 14:00, construite cu Claude",
+ "hoursLeft": 26.5,
+ "tick": 1,
+ "updatedAt": "16.11.2026, 11:31",
+ "startedAt": "16.11.2026, 11:30",
+ "oneLiner": "Încă nu se știe ce construiește echipa; abia a început.",
+ "analogy": "E ca o echipă care tocmai a deschis cutia de LEGO, încă fără piese puse.",
+ "building": {
+  "problem": "Încă nedefinită",
+  "idea": "Încă nedefinită",
+  "demo": "Nu există încă nimic de arătat",
+  "stack": []
+ },
+ "timeline": [
+  {"tick": 1, "at": "16.11.2026, 11:31", "headline": "Startul: o sesiune, un prim mesaj, fără cod încă", "mood": "exploring"}
+ ],
+ "toolbox": {
+  "prompts": {"count": 1, "names": [], "note": "Un singur mesaj până acum"},
+  "planMode": {"count": 0, "names": [], "note": "Încă nefolosit"},
+  "memory": {"count": 0, "names": [], "note": "Nu există CLAUDE.md"},
+  "skills": {"count": 0, "names": [], "note": "Niciun skill propriu"},
+  "slashCommands": {"count": 0, "names": [], "note": "Nicio comandă folosită"},
+  "subagents": {"count": 0, "names": [], "note": "Niciun ajutor în paralel"},
+  "mcp": {"count": 0, "names": [], "note": "Niciun conector la date reale"},
+  "hooks": {"count": 0, "names": [], "note": "Niciun hook"},
+  "loopsGoals": {"count": 0, "names": [], "note": "Niciun loop sau goal"},
+  "workflows": {"count": 0, "names": [], "note": "Niciun workflow"},
+  "artifacts": {"count": 0, "names": [], "note": "Nicio pagină de demo"}
+ },
+ "level": {"current": 0, "target": 3, "why": "Doar un prompt și o listă de pași; nicio regulă, verificare sau commit încă."},
+ "direction": {"heading": "Alegeți ideea și faceți primul pas", "status": "on-track", "why": "Abia a început; sunt 26 de ore, deci există timp să alegeți clar."},
+ "nextMoves": [
+  {"title": "Scrieți regulile echipei", "why": "Claude le ține minte în fiecare sesiune.", "tryThis": "/init"},
+  {"title": "Planificați înainte de a construi", "why": "Un plan clar evită munca aruncată.", "tryThis": "Shift+Tab pentru plan mode: «Planifică demo-ul în 3 pași, apoi construiește»"},
+  {"title": "Cereți verificarea", "why": "Un demo care merge bate un demo frumos.", "tryThis": "Rulează aplicația și arată-mi că merge înainte să spui gata"}
+ ],
+ "wins": ["Echipa a pornit repede și a folosit o listă de pași chiar din primul minut."],
+ "risks": ["Nu există încă idee scrisă, CLAUDE.md sau commit; timpul trece."],
+ "glossary": [
+  {"term": "subagent", "plain": "un Claude ajutor care lucrează în camera lui și vine cu rezultatul"},
+  {"term": "CLAUDE.md", "plain": "un caiet de reguli pe care Claude îl citește mereu"},
+  {"term": "plan mode", "plain": "Claude gândește și face planul înainte să atingă codul"}
+ ]
+}
+</script>
+<script>
+(function(){
+var D=null;try{D=JSON.parse(document.getElementById('pulse').textContent)}catch(e){}
+if(!D)return;
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
+var arr=function(a){return Array.isArray(a)?a:[]};
+var STATUS={'on-track':'var(--good)','drifting':'var(--warn)','pivoting':'var(--bad)'};
+var MOOD={exploring:'var(--warn)',building:'var(--accent)',stuck:'var(--bad)',pivot:'var(--bad)',shipping:'var(--good)'};
+var RO=/^ro/i.test(D.language||''),L=RO?{b:'Ce construiesc',tr:'Traseul',tb:'Trusa Claude',ld:'Scara Claude',cp:'Busola',mv:'Următoarele 2 ore — 3 mișcări',w:'Victorii',r:'Riscuri',g:'Glosar — cuvinte pe înțeles',p:'Problema',i:'Ideea',d:'Demo acum',here:'ești aici',goal:'țintă',head:'Direcție',up:'actualizat',ny:'încă nu',ft:'actualizat automat la 2h de Claude · ora României',st:'început',copy:'copiază',goalT:'Țintă',left:'ore rămase'}:{b:''+L.b+'',tr:'Trail map',tb:'Claude toolbox',ld:'Claude ladder',cp:'Compass',mv:''+L.mv+'',w:'Wins',r:'Risks',g:''+L.g+'',p:'Problem',i:'Idea',d:'Demo now',here:'you are here',goal:'goal',head:'Heading',up:'updated',ny:'not yet',ft:'auto-updated every 2h by Claude · Europe/Bucharest',st:'started',copy:'copy',goalT:'Goal',left:'hours left'};
+var dir=D.direction||{},lvl=D.level||{},b=D.building||{},tb=D.toolbox||{};
+var h='';
+// 1 hero
+h+='<div class="hero"><div><div class="muted small">'+esc(D.team)+' · hackathon pulse</div><h1>'+esc(D.oneLiner)+'</h1>'+
+'<p>'+esc(D.analogy)+'</p><span class="pill" style="background:'+(STATUS[dir.status]||'var(--muted)')+'">'+esc((RO?{'on-track':'pe drum bun','drifting':'deviază','pivoting':'pivotează'}:{})[dir.status]||dir.status||'—')+'</span>'+
+' <span class="muted small">'+L.up+' '+esc(D.updatedAt)+' · pulse #'+esc(D.tick)+'</span>'+(/^https:\/\/claude\.ai\//.test(D.teamPage||'')?' <a class="small" href="'+esc(D.teamPage)+'" target="_blank" rel="noopener">'+(RO?'pagina echipei':'team page')+' ↗</a>':'')+'</div>'+
+'<svg viewBox="0 0 200 150" aria-hidden="true"><circle cx="150" cy="38" r="20" fill="var(--warn)"/><path d="M0 130 L60 60 L100 105 L135 70 L200 130Z" fill="var(--path)"/><path d="M0 150 L0 130 L200 130 L200 150Z" fill="var(--line)"/><line x1="135" y1="70" x2="135" y2="35" stroke="var(--ink)" stroke-width="2"/><path d="M135 35 L160 42 L135 50Z" fill="var(--accent)"/><circle cx="60" cy="118" r="7" fill="var(--accent)"/></svg></div>';
+// 2 building
+var box=function(x,t,s,c){return '<rect x="'+x+'" y="10" width="190" height="110" rx="14" fill="var(--soft)" stroke="'+c+'" stroke-width="2"/><text x="'+(x+95)+'" y="36" text-anchor="middle" font-weight="700">'+t+'</text>'+wrap(s,x+95,60)};
+function wrap(s,x,y){var w=String(s||'').split(/\s+/),l=[],cur='';w.forEach(function(t){if((cur+' '+t).trim().length>24){l.push(cur);cur=t}else cur=(cur+' '+t).trim()});if(cur)l.push(cur);return l.slice(0,4).map(function(t,i){return '<text x="'+x+'" y="'+(y+i*17)+'" text-anchor="middle" font-size="13">'+esc(t)+'</text>'}).join('')}
+h+='<section><h2><span class="n">1</span>'+L.b+'</h2><svg viewBox="0 0 660 130">'+box(0,L.p,b.problem,'var(--bad)')+'<path d="M195 65 L230 65" stroke="var(--muted)" stroke-width="3" marker-end="url(#a)"/>'+box(235,L.i,b.idea,'var(--warn)')+'<path d="M430 65 L465 65" stroke="var(--muted)" stroke-width="3" marker-end="url(#a)"/>'+box(470,L.d,b.demo,'var(--good)')+'<defs><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker></defs></svg><div class="chips" style="margin-top:10px">'+arr(b.stack).map(function(s){return '<span class="chip">'+esc(s)+'</span>'}).join('')+'</div></section>';
+// 3 trail
+var tl=arr(D.timeline),n=Math.max(tl.length,1),W=640,step=(W-80)/(n+1);
+var pts=tl.map(function(t,i){return{x:40+step*(i+1)-step/2+20,y:i%2?70:120,t:t}});
+var tr='<svg viewBox="0 0 '+W+' 200"><path d="M10 170 '+pts.map(function(p){return 'L'+p.x+' '+p.y}).join(' ')+'" stroke="var(--path)" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+var last=pts[pts.length-1]||{x:10,y:170};
+tr+='<path d="M'+last.x+' '+last.y+' L'+(W-40)+' 40" stroke="var(--path)" stroke-width="4" stroke-dasharray="8 8" fill="none"/><line x1="'+(W-40)+'" y1="40" x2="'+(W-40)+'" y2="8" stroke="var(--ink)" stroke-width="2"/><path d="M'+(W-40)+' 8 L'+(W-15)+' 15 L'+(W-40)+' 22Z" fill="var(--good)"/><text x="'+(W-40)+'" y="60" text-anchor="middle" font-size="12" font-weight="700">'+L.goal+'</text>';
+pts.forEach(function(p,i){var me=i===pts.length-1;tr+='<circle cx="'+p.x+'" cy="'+p.y+'" r="'+(me?13:9)+'" fill="'+(MOOD[p.t.mood]||'var(--muted)')+'" stroke="var(--card)" stroke-width="3"/><text x="'+p.x+'" y="'+(p.y+4)+'" text-anchor="middle" font-size="10" font-weight="700" style="fill:var(--bg)">'+esc(p.t.tick)+'</text>'+(me?'<text x="'+p.x+'" y="'+(p.y-20)+'" text-anchor="middle" font-size="12" font-weight="700" style="fill:var(--accent)">'+L.here+'</text>':'')});
+tr+='</svg>';
+h+='<section><h2><span class="n">2</span>'+L.tr+'</h2>'+tr+'<div style="margin-top:8px">'+tl.slice().reverse().map(function(t){return '<div class="small"><b style="color:'+(MOOD[t.mood]||'var(--muted)')+'">#'+esc(t.tick)+' '+esc(t.mood)+'</b> <span class="muted">'+esc(t.at)+'</span> — '+esc(t.headline)+'</div>'}).join('')+'</div><p class="small muted">'+L.goalT+': '+esc(D.goal)+(D.hoursLeft!=null?' · <b>'+esc(D.hoursLeft)+' '+L.left+'</b>':'')+'</p></section>';
+// 4 toolbox
+var TOOLS=[['prompts','💬','Prompts','Prompturi'],['planMode','🗺️','Plan mode','Mod plan'],['memory','🧠','CLAUDE.md / memory','CLAUDE.md / memorie'],['skills','🧰','Skills','Skill-uri'],['slashCommands','⌨️','Slash commands','Comenzi /'],['subagents','🤝','Subagents','Subagenți'],['mcp','🔌','MCP connectors','Conectori MCP'],['hooks','🪝','Hooks','Hook-uri'],['loopsGoals','🔁','Loops & goals','Bucle & ținte'],['workflows','🏭','Workflows','Workflow-uri'],['artifacts','🖼️','Artifacts','Artefacte']];
+h+='<section><h2><span class="n">3</span>'+L.tb+'</h2><div class="grid">'+TOOLS.map(function(t){var v=tb[t[0]]||{},c=+v.count||0;return '<div class="tile'+(c?'':' off')+'"><div class="ic">'+t[1]+'</div><div class="c">'+(c||'—')+'</div><div><b>'+(RO?t[3]:t[2])+'</b></div><div class="chips">'+arr(v.names).slice(0,5).map(function(s){return '<span class="chip">'+esc(s)+'</span>'}).join('')+'</div><div class="small muted">'+(c?esc(v.note):L.ny)+'</div></div>'}).join('')+'</div></section>';
+// 5 ladder
+var RUNG=RO?['Conversație','Ancorat','Verificat','Reutilizabil','Delegare','Autonom']:['Chatting','Grounded','Verified','Reusable','Delegating','Autonomous'],cur=+lvl.current||0,tgt=+lvl.target||3;
+var ld='<svg viewBox="0 0 320 260"><line x1="60" y1="10" x2="60" y2="250" stroke="var(--path)" stroke-width="6"/><line x1="160" y1="10" x2="160" y2="250" stroke="var(--path)" stroke-width="6"/>';
+RUNG.forEach(function(r,i){var y=235-i*42;ld+='<line x1="60" y1="'+y+'" x2="160" y2="'+y+'" stroke="'+(i<=cur?'var(--accent)':'var(--path)')+'" stroke-width="5"/><text x="172" y="'+(y+5)+'" font-size="13"'+(i===cur?' font-weight="700"':'')+'>'+i+' '+r+'</text>';if(i===tgt)ld+='<text x="40" y="'+(y+6)+'" font-size="18" text-anchor="middle" style="fill:var(--warn)">★</text>';if(i===cur)ld+='<circle cx="110" cy="'+(y-12)+'" r="11" fill="var(--accent)"/><text x="110" y="'+(y-8)+'" text-anchor="middle" font-size="11" font-weight="700" style="fill:var(--bg)">'+(RO?'noi':'us')+'</text>'});
+ld+='</svg>';
+// 6 compass
+var ang={'on-track':0,'drifting':35,'pivoting':80}[dir.status]||0;
+var cp='<svg viewBox="0 0 220 220"><circle cx="110" cy="110" r="95" fill="var(--soft)" stroke="var(--line)" stroke-width="3"/><text x="110" y="34" text-anchor="middle" font-weight="700" style="fill:var(--good)">'+(RO?'ȚINTĂ':'GOAL')+'</text><g transform="rotate('+ang+' 110 110)"><path d="M110 40 L122 110 L110 120 L98 110Z" fill="var(--accent)"/><path d="M110 180 L122 110 L98 110Z" fill="var(--path)"/></g><circle cx="110" cy="110" r="6" fill="var(--ink)"/></svg>';
+h+='<div class="two"><section><h2><span class="n">4</span>'+L.ld+'</h2>'+ld+'<p class="small">'+esc(lvl.why)+'</p></section><section><h2><span class="n">5</span>'+L.cp+'</h2>'+cp+'<p><b>'+L.head+':</b> '+esc(dir.heading)+'</p><p class="small muted">'+esc(dir.why)+'</p></section></div>';
+// 7 moves
+h+='<section><h2><span class="n">6</span>'+L.mv+'</h2>'+arr(D.nextMoves).slice(0,3).map(function(m,i){return '<div class="move"><b>'+(i+1)+'. '+esc(m.title)+'</b><div class="small muted">'+esc(m.why)+'</div><div class="try"><span>'+esc(m.tryThis)+'</span><button data-c="'+esc(m.tryThis)+'">'+L.copy+'</button></div></div>'}).join('')+'</section>';
+// 8 wins/risks
+var list=function(a,c){return '<div class="chips">'+arr(a).map(function(s){return '<span class="chip" style="border-color:'+c+'">'+esc(s)+'</span>'}).join('')+'</div>'};
+h+='<div class="two"><section><h2>🏆 '+L.w+'</h2>'+list(D.wins,'var(--good)')+'</section><section><h2>⚠️ '+L.r+'</h2>'+list(D.risks,'var(--bad)')+'</section></div>';
+// 9 glossary
+h+='<section><details><summary>'+L.g+'</summary><dl>'+arr(D.glossary).map(function(g){return '<dt>'+esc(g.term)+'</dt><dd>'+esc(g.plain)+'</dd>'}).join('')+'</dl></details></section>';
+h+='<footer>'+L.ft+' · '+L.st+' '+esc(D.startedAt)+'</footer>';
+document.getElementById('app').innerHTML=h;
+document.addEventListener('click',function(e){var t=e.target.getAttribute&&e.target.getAttribute('data-c');if(t==null)return;try{navigator.clipboard.writeText(t);e.target.textContent='copied'}catch(x){}});
+})();
+</script>
+</body>
+</html>
