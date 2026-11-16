@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS scan_jobs (
     processed    INTEGER DEFAULT 0,
     found        INTEGER DEFAULT 0,
     error        TEXT,
+    detected     TEXT,                              -- JSON: furnizorii detectați în timp real
     started_at   TEXT,
     finished_at  TEXT,
     created_at   TEXT DEFAULT (datetime('now'))
@@ -54,6 +55,7 @@ CREATE TABLE IF NOT EXISTS discovered_providers (
     confidence        REAL,
     iban_valid        INTEGER DEFAULT 0,
     source_message_id TEXT,
+    invoice_pdf_path TEXT,                  -- relativ la data/, ex: invoices/1/3_0.pdf
     status            TEXT NOT NULL DEFAULT 'proposed'  -- proposed | confirmed | rejected
 );
 

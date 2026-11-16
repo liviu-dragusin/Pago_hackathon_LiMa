@@ -16,7 +16,8 @@ function providers_discovered(): void
 
     $stmt = $pdo->prepare(
         'SELECT d.id, d.name, d.cui, d.iban, d.iban_valid, d.client_code, d.category, d.last_amount, d.currency,
-                d.last_due_date, d.invoice_count, d.confidence, d.status, d.catalog_id, c.logo
+                d.last_due_date, d.invoice_count, d.confidence, d.status, d.catalog_id, c.logo,
+                (d.invoice_pdf_path IS NOT NULL) AS has_invoice_pdf
          FROM discovered_providers d
          JOIN scan_jobs j ON j.id = d.job_id
          LEFT JOIN provider_catalog c ON c.id = d.catalog_id
@@ -25,6 +26,36 @@ function providers_discovered(): void
     );
     $stmt->execute([$jobId, $uid]);
     json_out(['job_id' => $jobId, 'providers' => $stmt->fetchAll()]);
+}
+
+/** GET /api/providers/invoice?id=N – PDF-ul ultimei facturi a furnizorului propus (doar al utilizatorului). */
+function providers_invoice(): void
+{
+    $uid = require_user();
+    $stmt = db()->prepare(
+        'SELECT d.invoice_pdf_path FROM discovered_providers d
+         JOIN scan_jobs j ON j.id = d.job_id
+         WHERE d.id = ? AND j.user_id = ?'
+    );
+    $stmt->execute([(int) ($_GET['id'] ?? 0), $uid]);
+    $relative = $stmt->fetchColumn();
+    if (!$relative) {
+        json_out(['error' => 'Factura PDF nu este disponibilă.'], 404);
+    }
+
+    // Calea trebuie să rămână în data/invoices/ (protecție împotriva path traversal).
+    $base = realpath(ROOT_DIR . '/data/invoices');
+    $file = realpath(ROOT_DIR . '/data/' . $relative);
+    if ($base === false || $file === false || !str_starts_with($file, $base . DIRECTORY_SEPARATOR)) {
+        json_out(['error' => 'Factura PDF nu este disponibilă.'], 404);
+    }
+
+    header('Content-Type: application/pdf');
+    header('Content-Length: ' . filesize($file));
+    header('Content-Disposition: inline; filename="factura.pdf"');
+    header('X-Content-Type-Options: nosniff');
+    readfile($file);
+    exit;
 }
 
 /** POST /api/providers/confirm  body: {"job_id": N, "ids": [..]} – ce nu e bifat devine „rejected”. */

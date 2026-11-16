@@ -28,6 +28,13 @@ function db(): PDO
         ]);
         $pdo->exec('PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;');
         $pdo->exec((string) file_get_contents(ROOT_DIR . '/data/schema.sql'));
+        // Migrare: bazele create înainte de coloana invoice_pdf_path (SQLite nu are ADD COLUMN IF NOT EXISTS).
+        foreach ([['discovered_providers', 'invoice_pdf_path'], ['scan_jobs', 'detected']] as [$table, $column]) {
+            $cols = array_column($pdo->query("PRAGMA table_info($table)")->fetchAll(), 'name');
+            if (!in_array($column, $cols, true)) {
+                $pdo->exec("ALTER TABLE $table ADD COLUMN $column TEXT");
+            }
+        }
     }
     return $pdo;
 }

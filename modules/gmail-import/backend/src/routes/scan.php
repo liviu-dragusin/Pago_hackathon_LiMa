@@ -59,11 +59,12 @@ function spawn_scan_worker(int $jobId, bool $demo): void
 function scan_status(): void
 {
     $uid = require_user();
-    $stmt = db()->prepare('SELECT id, mode, status, total_emails, processed, found, error FROM scan_jobs WHERE id = ? AND user_id = ?');
+    $stmt = db()->prepare('SELECT id, mode, status, total_emails, processed, found, error, detected FROM scan_jobs WHERE id = ? AND user_id = ?');
     $stmt->execute([(int) ($_GET['id'] ?? 0), $uid]);
     $job = $stmt->fetch();
     if (!$job) {
         json_out(['error' => 'Scanare inexistentă.'], 404);
     }
+    $job['detected'] = json_decode((string) ($job['detected'] ?? ''), true) ?: [];
     json_out($job);
 }

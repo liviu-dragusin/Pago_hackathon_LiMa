@@ -55,6 +55,10 @@ python scripts/scan_inbox.py --job-id 1 --demo
 
 Scopurile cerute: `openid`, `email` și `gmail.readonly`. În modul Testing, Google acceptă până la 100 de conturi de test. Pentru producție e nevoie de verificarea aplicației și de o evaluare CASA (vezi `docs/PLAN.md`).
 
+### Preluare doar de la un expeditor (`sender_filter`)
+
+Dacă în `config.json` setezi `"sender_filter": "adresa@exemplu.ro"`, scanarea Gmail preia **doar** emailurile trimise de acea adresă (interogare `from:adresa`, fără alte filtre) și citește **furnizorul din titlul emailului**, nu din expeditor. Cuvintele de umplutură („Factura”, „nr.”, luna, anul, numărul facturii, `Fwd:`, `[Tag]`) sunt eliminate, iar ce rămâne se potrivește cu catalogul (`Factura Enel nr. 4471293 - noiembrie 2026` → Enel Energie). PDF-ul atașat e păstrat ca factură. Lasă valoarea goală ca să revii la căutarea generală. Modul demo ignoră setarea.
+
 ## Cum funcționează extragerea
 
 - Cu `anthropic_api_key` completat, `scripts/extractor.py` trimite emailul (și PDF-ul, dacă există) la `claude-opus-5-5` și primește date structurate prin `messages.parse`.

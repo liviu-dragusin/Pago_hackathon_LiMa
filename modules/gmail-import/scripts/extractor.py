@@ -9,6 +9,8 @@ from email.utils import parseaddr
 
 from pydantic import BaseModel
 
+import matcher
+
 MODEL = "claude-opus-5-5"
 
 SYSTEM_PROMPT = """Ești un asistent care extrage date din facturi românești.
@@ -17,6 +19,9 @@ Primești un email și, opțional, PDF-ul atașat.
 - Nu inventa valori. Dacă un câmp lipsește, pune null.
 - IBAN-ul copiază-l exact, fără spații. Sumele sunt numere cu punct zecimal.
 - due_date în format YYYY-MM-DD.
+- Pago acoperă doar facturi recurente de utilități și servicii (energie, gaz, apă, salubritate, telecom,
+  internet, asigurare, întreținere). Comenzile din magazine online, retail sau marketplace (produse cumpărate)
+  nu sunt facturi pentru Pago: pune is_invoice=false și is_online_store=true.
 - category: energie, gaz, apa, salubritate, telecom, internet, asigurare, intretinere sau altele."""
 
 
@@ -32,21 +37,41 @@ class InvoiceData(BaseModel):
     due_date: str | None
     category: str | None
     confidence: float
+    is_online_store: bool
 
 
-def extract_invoice(message: dict, cfg: dict) -> dict | None:
-    """Returnează un dict cu datele facturii sau None dacă mesajul nu e factură."""
+def extract_invoice(message: dict, cfg: dict, trusted_sender: bool = False) -> dict | None:
+    """Returnează un dict cu datele facturii sau None dacă mesajul nu e factură.
+
+    Cu `trusted_sender` (emailurile vin de la un expeditor de încredere, care pune numele furnizorului
+    în titlu): furnizorul se citește din titlu, nu din expeditor, iar mesajul e tratat ca factură.
+    """
+    subject_provider = matcher.provider_from_subject(message["subject"]) if trusted_sender else None
+    if trusted_sender and not subject_provider:
+        return None  # titlul nu conține niciun nume de furnizor
+
     api_key = cfg.get("anthropic_api_key")
-    data = _extract_with_claude(message, api_key) if api_key else _extract_with_rules(message)
-    if data is None or not data.is_invoice or not data.provider_name:
+    if api_key:
+        data = _extract_with_claude(message, api_key, subject_provider)
+    else:
+        data = _extract_with_rules(message)
+    if data is None:
+        return None
+    if subject_provider:
+        data.provider_name = subject_provider
+        data.is_invoice = True
+        data.is_online_store = False
+    if not data.is_invoice or data.is_online_store or not data.provider_name:
         return None
 
     invoice = data.model_dump()
     invoice["source_message_id"] = message["id"]
+    # Primul PDF atașat e factura; îl păstrăm pe disc (Gmail se revocă după scanare).
+    invoice["pdf"] = message["pdfs"][0] if message.get("pdfs") else None
     return invoice
 
 
-def _extract_with_claude(message: dict, api_key: str) -> InvoiceData | None:
+def _extract_with_claude(message: dict, api_key: str, subject_provider: str | None = None) -> InvoiceData | None:
     import anthropic
 
     client = anthropic.Anthropic(api_key=api_key)
@@ -60,9 +85,10 @@ def _extract_with_claude(message: dict, api_key: str) -> InvoiceData | None:
                 "data": base64.standard_b64encode(pdf).decode("ascii"),
             },
         })
+    hint = f"Furnizorul facturii este «{subject_provider}» (din titlul emailului).\n" if subject_provider else ""
     content.append({
         "type": "text",
-        "text": f"De la: {message['from']}\nSubiect: {message['subject']}\nData: {message['date']}\n\n"
+        "text": f"{hint}De la: {message['from']}\nSubiect: {message['subject']}\nData: {message['date']}\n\n"
                 f"{message['body'][:8000]}",
     })
 
@@ -126,4 +152,5 @@ def _extract_with_rules(message: dict) -> InvoiceData:
         due_date=_parse_date(_field(text, r"Scaden[tț][aă]")),
         category=(_field(text, "Categorie") or "").lower() or None,
         confidence=0.6,  # regex: încredere mai mică decât la LLM
+        is_online_store=False,  # regex nu detectează magazinele; le filtrează matcher.is_online_store
     )

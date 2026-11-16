@@ -1,13 +1,13 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { Home, Mail, MapPinPlus, Moon, PieChart, Receipt, Sun, Trophy, Users } from 'lucide-react'
+import { Home, LogOut, MapPinPlus, Moon, PieChart, Receipt, Sun, Trophy, Users } from 'lucide-react'
 import { useTheme } from '../lib/theme'
+import { useAuth } from '../modules/auth'
 import { Assistant } from '../modules/assistant'
 
 const NAV = [
   { to: '/', label: 'Acasă', icon: Home, end: true },
   { to: '/facturi', label: 'Facturi', icon: Receipt },
   { to: '/furnizori', label: 'Adaugă furnizor', short: 'Furnizori', icon: MapPinPlus },
-  { to: '/importa', label: 'Import din Gmail', short: 'Gmail', icon: Mail },
   { to: '/buget', label: 'Buget & Predicții', short: 'Buget', icon: PieChart },
   { to: '/split', label: 'Plăți split', short: 'Split', icon: Users },
   { to: '/recompense', label: 'Recompense', short: 'Puncte', icon: Trophy },
@@ -39,6 +39,7 @@ export default function Layout() {
           ))}
         </nav>
         <div className="mt-auto space-y-3">
+          <UserBox />
           <ThemeToggle wide />
           <div className="rounded-xl bg-brand-50 p-4 text-xs text-brand-900">
             <p className="font-semibold">Hackathon Pago 2026</p>
@@ -50,7 +51,10 @@ export default function Layout() {
       {/* Header mobil */}
       <header className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-200 bg-surface/90 px-4 py-3 backdrop-blur lg:hidden">
         <Logo />
-        <ThemeToggle />
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <LogoutButton />
+        </div>
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-6 pb-24 sm:px-6 lg:px-8 lg:py-8 lg:pb-8">
@@ -78,6 +82,44 @@ export default function Layout() {
         ))}
       </nav>
     </div>
+  )
+}
+
+function UserBox() {
+  const { user, logout } = useAuth()
+  if (!user) return null
+  return (
+    <div className="flex items-center gap-2 rounded-xl px-3 py-2 ring-1 ring-slate-200">
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-xs font-semibold text-slate-800">{user.email}</p>
+        <p className="text-[11px] text-slate-500">{user.demo ? 'Cont demo' : 'Conectat cu Gmail'}</p>
+      </div>
+      <button
+        type="button"
+        onClick={logout}
+        aria-label="Deconectare"
+        title="Deconectare"
+        className="rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-50 hover:text-slate-900"
+      >
+        <LogOut className="h-4 w-4" />
+      </button>
+    </div>
+  )
+}
+
+function LogoutButton() {
+  const { user, logout } = useAuth()
+  if (!user) return null
+  return (
+    <button
+      type="button"
+      onClick={logout}
+      aria-label="Deconectare"
+      title="Deconectare"
+      className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-slate-900"
+    >
+      <LogOut className="h-5 w-5" />
+    </button>
   )
 }
 

@@ -1,6 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import './index.css'
 import Layout from './components/Layout'
 import { ToastProvider } from './components/ui'
@@ -11,13 +11,14 @@ import Budget from './pages/Budget'
 import Split from './pages/Split'
 import Rewards from './pages/Rewards'
 import { ProviderMapPage } from './modules/provider-map'
-import { GmailImportPage } from './modules/gmail-import'
+import { AuthGate } from './modules/auth'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ThemeProvider>
     <ToastProvider>
       <BrowserRouter>
+        <AuthGate>
         <Routes>
           <Route element={<Layout />}>
             <Route index element={<Dashboard />} />
@@ -26,9 +27,10 @@ createRoot(document.getElementById('root')).render(
             <Route path="split" element={<Split />} />
             <Route path="recompense" element={<Rewards />} />
             <Route path="furnizori" element={<ProviderMapPage />} />
-            <Route path="importa" element={<GmailImportPage />} />
           </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </AuthGate>
       </BrowserRouter>
     </ToastProvider>
     </ThemeProvider>
