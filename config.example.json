@@ -1,0 +1,11 @@
+{
+  "google": {
+    "client_id": "",
+    "client_secret": "",
+    "redirect_uri": "http://localhost/pago/api/auth/google/callback"
+  },
+  "anthropic_api_key": "",
+  "python_path": "python",
+  "frontend_url": "http://localhost:5173",
+  "demo_email": "demo@pago.local"
+}

@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LiMa · Pulse</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap">
+<style>
+:root{--ground:#EFF2F7;--surface:#FFF;--surface-2:#F7F8FB;--ink:#161F28;--muted:#5A6B8F;--line:#DFE6F6;--accent:#2B59C3;--accent-soft:#E6F0FF;--shadow:0 0 1.4px rgba(24,24,27,.3),0 5.6px 11.2px rgba(24,24,27,.1)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ground:#0E131A;--surface:#171D26;--surface-2:#1D2430;--ink:#E6EAF2;--muted:#94A3BD;--line:#2A3240;--accent:#7FA2F5;--accent-soft:#1A2747;--shadow:0 4px 12px rgba(0,0,0,.35)}}
+:root[data-theme="dark"]{--ground:#0E131A;--surface:#171D26;--surface-2:#1D2430;--ink:#E6EAF2;--muted:#94A3BD;--line:#2A3240;--accent:#7FA2F5;--accent-soft:#1A2747;--shadow:0 4px 12px rgba(0,0,0,.35)}
+*{box-sizing:border-box}
+html{background:var(--ground)}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:"Poppins",system-ui,sans-serif;font-size:15px;line-height:1.6;overflow-wrap:anywhere}
+svg,img,.card{max-width:100%}
+svg{display:block;width:100%;height:auto}
+.page{max-width:880px;margin:0 auto;padding:20px 16px 32px;display:flex;flex-direction:column;gap:28px}
+h1{font-weight:800;font-size:clamp(30px,5.2vw,46px);line-height:1.1;margin:0;color:#FFD54A}
+h2{font-weight:700;font-size:1.35rem;margin:0 0 12px}
+h3{font-weight:600;font-size:1rem;margin:0}
+p{margin:0}
+.mast{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.mast .w{font-weight:800;font-size:1.5rem;color:var(--accent);text-transform:lowercase}
+.mast .sep{width:1px;height:22px;background:var(--line)}
+.mast .t{font-size:.8rem;color:var(--muted)}
+.poster{position:relative;overflow:hidden;background:linear-gradient(160deg,#2A56D4,#1E43B8);color:#fff;border-radius:28px;padding:28px;display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:center}
+.poster:after{content:"";position:absolute;right:-80px;bottom:-100px;width:320px;height:320px;background:radial-gradient(circle,rgba(255,213,74,.55),rgba(255,213,74,0) 70%);pointer-events:none}
+.poster>*{position:relative;z-index:1;min-width:0}
+.sub{font-weight:700;font-size:1.05rem;margin-top:12px;color:#fff}
+.ana{margin-top:10px;font-size:.9rem;color:#fff;opacity:.92}
+.phone{border:2px solid rgba(255,255,255,.38);background:rgba(255,255,255,.14);border-radius:34px;padding:14px}
+@media(max-width:640px){.poster{grid-template-columns:1fr;padding:22px}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:18px}
+.ico{width:48px;height:48px;border-radius:14px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;flex:none}
+.ico svg{width:26px;height:26px}
+.pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:.75rem;font-weight:600;line-height:1.5;white-space:nowrap}
+.m1{background:var(--accent);color:#fff}
+.m2{background:#FFD54A;color:#161F28}
+.here{background:#FFD54A;color:#161F28}
+.trail{display:flex;flex-direction:column;gap:14px;position:relative}
+.stop{display:flex;gap:14px;align-items:flex-start}
+.dot{width:48px;flex:none;display:flex;justify-content:center}
+.dot svg{width:34px}
+.stop .card{flex:1;min-width:0}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:6px}
+.time{font-size:.8rem;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:14px}
+.tile{display:flex;gap:14px;align-items:flex-start}
+.tile>div:last-child{min-width:0}
+.tile p{color:var(--muted);font-size:.9rem;margin:4px 0 8px}
+.next{display:flex;flex-direction:column;gap:12px}
+.next .card{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.next .card p{flex:1 1 200px;min-width:0}
+.cap{font-size:.8rem;color:var(--muted);margin-top:8px;text-align:center}
+footer{border-top:1px solid var(--line);padding-top:14px;font-size:.8rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<main class="page">
+
+<header class="mast">
+<span class="w">pago</span><span class="sep"></span><span class="t">AI Hackathon · LiMa</span>
+</header>
+
+<section class="poster" aria-label="Ce construim">
+<div>
+<h1>LiMa · Pulse</h1>
+<p class="sub">Încă nu știm clar ce construim: ideea echipei nu e scrisă.</p>
+<p class="ana">E ca o cutie goală de Lego. Avem camerele (foldere), dar încă nu avem planul casei.</p>
+</div>
+<div class="phone">
+<svg viewBox="0 0 280 220" role="img" aria-label="Foldere și un plan încă gol" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+<rect x="20" y="20" width="240" height="180" rx="14" stroke-dasharray="6 7"/>
+<g>
+<path d="M36 60h22l6 8h30v30H36z"/><text x="36" y="118" fill="#fff" stroke="none" font-size="10" font-family="Poppins,system-ui,sans-serif">backend</text>
+<path d="M110 60h22l6 8h30v30h-58z" stroke="#FFD54A"/><text x="110" y="118" fill="#fff" stroke="none" font-size="10" font-family="Poppins,system-ui,sans-serif">frontend</text>
+<path d="M184 60h22l6 8h30v30h-58z"/><text x="184" y="118" fill="#fff" stroke="none" font-size="10" font-family="Poppins,system-ui,sans-serif">date demo</text>
+</g>
+<circle cx="140" cy="165" r="22" stroke="#FFD54A"/>
+<path d="M132 160a8 8 0 1 1 11 7c-3 2-3 4-3 7" stroke="#FFD54A"/>
+<circle cx="140" cy="181" r=".8" stroke="#FFD54A"/>
+</svg>
+</div>
+</section>
+
+<section>
+<h2>Problemă → Idee → Demo</h2>
+<div class="card">
+<svg viewBox="0 0 720 200" role="img" aria-label="Problemă, idee, demo" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="font-family:Poppins,system-ui,sans-serif">
+<defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1l8 4-8 4" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g stroke="var(--accent)">
+<rect x="10" y="20" width="200" height="110" rx="18" fill="var(--surface-2)"/>
+<rect x="260" y="20" width="200" height="110" rx="18" fill="var(--surface-2)"/>
+<rect x="510" y="20" width="200" height="110" rx="18" fill="var(--surface-2)"/>
+<path d="M214 75h42" marker-end="url(#ar)"/>
+<path d="M464 75h42" marker-end="url(#ar)"/>
+<circle cx="110" cy="58" r="14"/><path d="M104 54a6 6 0 1 1 8 5c-2 1-2 3-2 5"/>
+<path d="M360 46a14 14 0 0 1 8 25v6h-16v-6a14 14 0 0 1 8-25z"/><path d="M355 86h10"/>
+<rect x="578" y="38" width="64" height="40" rx="6"/><path d="M600 94h20M610 78v16"/>
+</g>
+<g fill="var(--ink)" stroke="none" font-size="14" font-weight="600" text-anchor="middle">
+<text x="110" y="100">Problema</text><text x="360" y="108">Ideea</text><text x="610" y="118">Demo</text>
+</g>
+<g fill="var(--muted)" stroke="none" font-size="12" text-anchor="middle">
+<text x="110" y="148">Ideea nu e scrisă clar</text>
+<text x="360" y="148">Încă se conturează</text>
+<text x="610" y="148">Nu se știe ce arătăm</text>
+</g>
+</svg>
+</div>
+</section>
+
+<section>
+<h2>Drumul nostru</h2>
+<div class="trail">
+<div class="stop">
+<div class="dot"><svg viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="11" fill="#FFD54A" stroke="var(--accent)" stroke-width="2.2"/><path d="M12 17l4 4 7-8" fill="none" stroke="#161F28" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+<div class="card">
+<div class="row"><span class="pill m1">M1</span><span class="time">16.11.2026, 10:28</span><span class="pill here">Ești aici</span></div>
+<h3>Pagina de progres e pornită; ideea echipei încă se conturează.</h3>
+</div>
+</div>
+</div>
+</section>
+
+<section>
+<h2>Cum folosim Claude</h2>
+<div class="grid">
+<div class="card tile">
+<div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 5l-4 14"/></svg></div>
+<div><h3>Claude Code</h3><p>Configurarea paginii de progres: fișiere, excludere în git și schița tick-ului.</p><span class="pill m1">M1</span></div>
+</div>
+<div class="card tile">
+<div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3M7 13l3-3 3 2 4-4"/></svg></div>
+<div><h3>Artifact</h3><p>Pagina de progres a echipei, publicată ca artifact.</p><span class="pill m1">M1</span></div>
+</div>
+</div>
+</section>
+
+<section>
+<h2>Pasul următor</h2>
+<div class="next">
+<div class="card"><span class="pill m1">M1</span><p>Publicăm pagina și o trimitem Membrului 2, cu acces de editare.</p></div>
+</div>
+</section>
+
+<footer>Făcut la Pago</footer>
+</main>
+<script type="application/json" id="pulse-data">{
+  "team": "LiMa",
+  "ticks": [
+    {
+      "n": 1,
+      "member": 1,
+      "time": "16.11.2026, 10:28",
+      "headline": "Pagina de progres e pornită; ideea echipei încă se conturează."
+    }
+  ],
+  "members": {
+    "1": {
+      "building": "Încă nu e scrisă ideea echipei în conversație. În repo sunt foldere pentru backend, frontend, documentație, scripturi și date demo.",
+      "works": "Pagina de progres Pulse: folderul .hackathon-pulse, fișierul de design și schița tick-ului sunt gata.",
+      "blocking": "Ideea echipei nu e încă scrisă clar, deci nu se știe ce demo arătăm.",
+      "features": [
+        { "name": "Claude Code", "for": "configurarea paginii de progres: fișiere, excludere în git și schița tick-ului" },
+        { "name": "Artifact", "for": "pagina de progres a echipei, publicată ca artifact" }
+      ],
+      "next": "Publicăm pagina și o trimitem Membrului 2, cu acces de editare."
+    }
+  }
+}
+</script>
+</body>
+</html>

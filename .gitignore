@@ -1,0 +1,10 @@
+config.json
+data/app.sqlite
+data/app.sqlite-*
+data/*.log
+node_modules/
+frontend/dist/
+__pycache__/
+*.pyc
+.env
+.venv/
