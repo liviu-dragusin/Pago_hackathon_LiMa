@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Users } from 'lucide-react'
 import { api } from '../lib/api'
 import { dueText, monthLabel, ron } from '../lib/format'
-import { Button, CategoryIcon, StatusBadge, useToast } from './ui'
+import { Button, StatusBadge, useToast } from './ui'
+import ProviderLogo from '../modules/provider-map/ProviderLogo'
 
 /** Plătește o factură și afișează punctele / badge-urile câștigate. */
 export function usePayBill(onPaid) {
@@ -34,7 +35,7 @@ export default function BillRow({ bill, onPay, paying, showPeriod = false }) {
   const urgent = bill.status === 'overdue' || (bill.status === 'unpaid' && bill.days_left <= 3)
   return (
     <div className="flex items-center gap-3 py-3">
-      <CategoryIcon cat={bill.category} />
+      <ProviderLogo logo={bill.logo} cat={bill.category} className="h-10 w-10" />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <p className="truncate font-medium">{bill.provider}</p>

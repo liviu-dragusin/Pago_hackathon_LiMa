@@ -9,3 +9,4 @@ api/data/*.sqlite-journal
 __pycache__/
 *.pyc
 .venv/
+api/data/weather/

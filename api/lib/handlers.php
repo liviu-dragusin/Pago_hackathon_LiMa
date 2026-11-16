@@ -8,7 +8,7 @@ function bills_query(string $where = '', array $params = []): array
     $st = db()->prepare(
         "SELECT b.id, b.period, b.amount, b.issued_at, b.due_date, b.paid_at,
                 up.id AS account_id, up.client_code, up.alias,
-                p.name AS provider, p.category, p.color,
+                p.slug, p.name AS provider, p.category, p.color,
                 EXISTS (SELECT 1 FROM split_shares s WHERE s.bill_id = b.id) AS is_split
            FROM bills b
            JOIN user_providers up ON up.id = b.user_provider_id
@@ -26,6 +26,7 @@ function with_status(array $b): array
     $b['is_split']  = (bool) $b['is_split'];
     $b['status']    = $b['paid_at'] ? 'paid' : ($b['due_date'] < today() ? 'overdue' : 'unpaid');
     $b['days_left'] = days_between(today(), $b['due_date']);
+    $b['logo']      = catalog()['providers'][$b['slug']]['logo'] ?? null;
     return $b;
 }
 
@@ -67,12 +68,14 @@ function h_pay_bill(string $id): array
 function account_histories(): array
 {
     $st = db()->prepare(
-        'SELECT up.id AS account_id, up.alias, p.name AS provider, p.category, p.color, b.period, b.amount
+        "SELECT up.id AS account_id, up.alias, p.name AS provider, p.category, p.color, b.period, b.amount,
+                COALESCE(up.county, u.county, 'B') AS county
            FROM bills b
            JOIN user_providers up ON up.id = b.user_provider_id
            JOIN providers p ON p.id = up.provider_id
+           JOIN users u ON u.id = up.user_id
           WHERE up.user_id = ?
-          ORDER BY up.id, b.period'
+          ORDER BY up.id, b.period"
     );
     $st->execute([USER_ID]);
 
@@ -81,7 +84,7 @@ function account_histories(): array
         $id = $r['account_id'];
         $accounts[$id] ??= [
             'account_id' => $id, 'provider' => $r['provider'], 'alias' => $r['alias'],
-            'category' => $r['category'], 'color' => $r['color'], 'history' => [],
+            'category' => $r['category'], 'color' => $r['color'], 'county' => $r['county'], 'history' => [],
         ];
         $accounts[$id]['history'][] = ['period' => $r['period'], 'amount' => (float) $r['amount']];
     }
@@ -94,18 +97,31 @@ function h_predictions(): array
     $anomalies = [];
     $predictedByCat = [];
 
+    $weatherNext = null;
     foreach (account_histories() as $acc) {
-        $prediction = predict_next($acc['history']);
+        $seasonal   = predict_next($acc['history']);
         $anomaly    = detect_anomaly($acc['history']);
         $meta       = array_diff_key($acc, ['history' => 1]);
+
+        // Pentru facturile care depind de frig, încercăm modelul meteo (grade-zile de încălzire).
+        $weather = null;
+        if ($seasonal && in_array($acc['category'], WEATHER_CATEGORIES, true)) {
+            $periods = array_column($acc['history'], 'period');
+            $next    = weather_next_month($acc['county'], $seasonal['period']);
+            $weather = weather_model($acc['history'], weather_for_periods($acc['county'], $periods), $next, $anomaly['period'] ?? null);
+            $weatherNext ??= $next + ['county' => $acc['county']];
+        }
+        $prediction = $weather['prediction'] ?? $seasonal;
 
         if ($anomaly) $anomalies[] = $meta + $anomaly;
         if ($prediction) $predictedByCat[$acc['category']] = ($predictedByCat[$acc['category']] ?? 0) + $prediction['amount'];
 
         $accounts[] = $meta + [
-            'history'    => array_slice($acc['history'], -12),
-            'prediction' => $prediction,
-            'anomaly'    => $anomaly,
+            'history'             => array_slice($acc['history'], -12),
+            'prediction'          => $prediction,
+            'prediction_seasonal' => $seasonal,
+            'weather'             => $weather ? array_diff_key($weather, ['prediction' => 1]) : null,
+            'anomaly'             => $anomaly,
         ];
     }
 
@@ -132,6 +148,7 @@ function h_predictions(): array
         'categories'      => $categories,
         'accounts'        => $accounts,
         'anomalies'       => $anomalies,
+        'weather_next'    => $weatherNext, // vremea estimată luna viitoare (județul primului cont cu încălzire)
     ];
 }
 

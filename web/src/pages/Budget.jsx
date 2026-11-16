@@ -1,6 +1,18 @@
 import { useState } from 'react'
-import { AlertTriangle, Pencil, Sparkles } from 'lucide-react'
-import { CartesianGrid, Line, LineChart, ReferenceArea, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { AlertTriangle, Pencil, Sparkles, Thermometer } from 'lucide-react'
+import {
+  CartesianGrid,
+  ComposedChart,
+  Line,
+  LineChart,
+  ReferenceArea,
+  ReferenceDot,
+  ResponsiveContainer,
+  Scatter,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
 import { Button, Card, CardTitle, CategoryIcon, ErrorBox, Loading, PageHeader, ProgressBar, useToast } from '../components/ui'
 import { api, useApi } from '../lib/api'
 import { category, monthLabel, ron } from '../lib/format'
@@ -14,13 +26,16 @@ export default function Budget() {
   if (error) return <ErrorBox error={error} />
 
   const over = data.total_predicted > data.total_budget
-  const account = data.accounts.find((a) => a.account_id === accountId) ?? data.accounts[0]
+  // implicit arătăm primul cont la care vremea contează (ex. gazul)
+  const account =
+    data.accounts.find((a) => a.account_id === accountId) ?? data.accounts.find((a) => a.weather) ?? data.accounts[0]
+  const wx = data.weather_next
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Buget & Predicții"
-        subtitle={`Estimăm facturile din ${monthLabel(data.period_next, { month: 'long', year: 'numeric' })} din istoricul tău (sezonalitate + trend).`}
+        subtitle={`Estimăm facturile din ${monthLabel(data.period_next, { month: 'long', year: 'numeric' })} din istoricul tău și din vremea estimată (gaz, întreținere), plus sezonalitate și trend.`}
       />
 
       <Card className={over ? 'border-red-200' : 'border-emerald-200'}>
@@ -40,6 +55,16 @@ export default function Budget() {
             </p>
           </div>
         </div>
+        {wx && (
+          <p className="mt-4 flex flex-wrap items-center gap-2 border-t border-line pt-4 text-sm text-slate-600">
+            <Thermometer className="h-4 w-4 text-[var(--accent)]" />
+            <span>
+              {monthLabel(wx.period, { month: 'long' })}: în medie <b className="tabular-nums">{formatTemp(wx.temp)}</b>
+              {wx.county === 'B' ? ' în București' : ` în județul ${wx.county}`}
+            </span>
+            <span className="text-xs text-slate-400">({wx.source}, date Open-Meteo)</span>
+          </p>
+        )}
       </Card>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -65,7 +90,138 @@ export default function Budget() {
         </div>
         <AccountChart account={account} />
       </Card>
+
+      {account.weather ? (
+        <WeatherPanel key={account.account_id} account={account} />
+      ) : (
+        ['energie', 'gaz', 'intretinere'].includes(account.category) && (
+          <p className="rounded-[18px] border border-dashed border-slate-300 px-5 py-4 text-sm text-slate-500">
+            Pentru {account.provider}, temperatura nu explică bine factura (de exemplu, curentul crește și vara, de la aerul
+            condiționat), așa că folosim modelul sezonier.
+          </p>
+        )
+      )}
     </div>
+  )
+}
+
+const formatTemp = (t) => `${t.toLocaleString('ro-RO', { maximumFractionDigits: 1 })} °C`
+
+/** Factura estimată pentru o lună cu temperatura medie T: bază + cost/grad-zi × zile × max(0, 18 − T). */
+const amountAt = (model, temp, days) => model.base + model.per_hdd * days * Math.max(0, model.base_temp - temp)
+
+function WeatherPanel({ account }) {
+  const { colors } = useTheme()
+  const { model, next, points } = account.weather
+  const [temp, setTemp] = useState(next.temp)
+  const days = next.days
+
+  const atTemp = amountAt(model, temp, days)
+  const at10 = amountAt(model, 10, 30)
+  const at0 = amountAt(model, 0, 30)
+  const perDegree = model.per_hdd * days // lei în plus pentru fiecare grad mai rece (sub 18 °C)
+
+  const curve = Array.from({ length: 41 }, (_, i) => -15 + i).map((t) => ({ temp: t, model: Math.round(amountAt(model, t, 30.4)) }))
+  const scatter = points.map((p) => ({ temp: p.temp, amount: p.amount_today, period: p.period }))
+
+  return (
+    <Card>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <CardTitle>Cum influențează vremea factura de {account.provider}</CardTitle>
+          <p className="-mt-2 text-sm text-slate-500">
+            Am comparat fiecare factură cu temperatura din luna respectivă. Cu cât e mai frig, cu atât crește consumul de încălzire.
+          </p>
+        </div>
+        <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700" title="R²: cât din variația facturii explică temperatura">
+          Precizie {Math.round(model.r2 * 100)}%
+        </span>
+      </div>
+
+      <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="h-72">
+          <ResponsiveContainer>
+            <ComposedChart margin={{ left: -6, right: 12, top: 8 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis
+                dataKey="temp"
+                type="number"
+                domain={[-15, 25]}
+                ticks={[-15, -10, -5, 0, 5, 10, 15, 20, 25]}
+                tickFormatter={(t) => `${t}°`}
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis tick={{ fontSize: 12 }} />
+              <Tooltip
+                formatter={(v, n) => [ron(v), n === 'model' ? 'Model' : 'Factură (preț de azi)']}
+                labelFormatter={(t) => `Temperatură medie ${t} °C`}
+              />
+              <Line data={curve} dataKey="model" stroke={colors.accent} strokeWidth={2.5} dot={false} isAnimationActive={false} />
+              <Scatter data={scatter} dataKey="amount" fill={account.color} />
+              <ReferenceDot x={temp} y={Math.round(atTemp)} r={7} fill={colors.accent} stroke="var(--surface)" strokeWidth={2} />
+            </ComposedChart>
+          </ResponsiveContainer>
+          <p className="mt-1 text-center text-xs text-slate-500">
+            Puncte: facturile tale (aduse la prețul de azi) · Linia: modelul · Cercul: temperatura aleasă
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          <div className="rounded-[18px] bg-surface-2 p-4">
+            <p className="text-sm font-semibold">Calculator: dacă luna are…</p>
+            <div className="mt-3 flex items-baseline justify-between">
+              <span className="text-3xl font-extrabold tabular-nums text-[var(--accent)]">{formatTemp(temp)}</span>
+              <span className="text-xs text-slate-500">temperatură medie</span>
+            </div>
+            <input
+              type="range"
+              min={-15}
+              max={25}
+              step={0.1}
+              value={temp}
+              onChange={(e) => setTemp(Number(e.target.value))}
+              className="mt-2 w-full accent-[var(--accent)]"
+              aria-label="Temperatura medie a lunii"
+            />
+            <div className="flex justify-between text-[11px] text-slate-400">
+              <span>−15 °C</span>
+              <span>25 °C</span>
+            </div>
+            <p className="mt-3 text-sm text-slate-600">…estimăm o factură de</p>
+            <p className="text-2xl font-bold tabular-nums">{ron(atTemp)}</p>
+            <button
+              type="button"
+              onClick={() => setTemp(next.temp)}
+              className="mt-2 text-xs font-semibold text-brand-600 hover:underline"
+            >
+              Folosește vremea estimată pentru {monthLabel(next.period, { month: 'long' })} ({formatTemp(next.temp)})
+            </button>
+          </div>
+
+          <div className="rounded-[18px] border border-line p-4 text-sm">
+            <p className="font-semibold">Exemplu</p>
+            <p className="mt-1 text-slate-600">
+              Într-o lună cu <b>10 °C</b> plătești ~<b className="tabular-nums">{ron(at10)}</b>. La <b>0 °C</b>, estimăm ~
+              <b className="tabular-nums">{ron(at0)}</b> (+{Math.round((at0 / at10 - 1) * 100)}%).
+            </p>
+          </div>
+
+          <dl className="grid grid-cols-2 gap-3 text-sm">
+            <div className="rounded-[14px] border border-line p-3">
+              <dt className="text-xs text-slate-500">Bază (fără încălzire)</dt>
+              <dd className="font-semibold tabular-nums">{ron(model.base)}/lună</dd>
+            </div>
+            <div className="rounded-[14px] border border-line p-3">
+              <dt className="text-xs text-slate-500">Fiecare grad mai rece</dt>
+              <dd className="font-semibold tabular-nums">+{ron(perDegree)}/lună</dd>
+            </div>
+          </dl>
+          <p className="text-xs text-slate-400">
+            Încălzirea pornește sub {model.base_temp} °C. Model antrenat pe {model.samples} luni; luna cu anomalie e exclusă.
+          </p>
+        </div>
+      </div>
+    </Card>
   )
 }
 
