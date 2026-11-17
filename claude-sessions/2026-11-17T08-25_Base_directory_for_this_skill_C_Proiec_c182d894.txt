@@ -1,0 +1,171 @@
+=== USER (2026-11-17T08:25:11.945Z) ===
+<command-message>start-app</command-message>
+<command-name>/start-app</command-name>
+
+=== USER (2026-11-17T08:25:11.945Z) ===
+Base directory for this skill: C:\Proiecte\Pago_hackathon_LiMa\.claude\skills\start-app
+
+# Start the Pago app
+
+The app has two parts that must both be running: the **PHP API** (served by Apache from XAMPP) and the **Vite frontend** on port 5173. Vite proxies `/api/*` to Apache, so a frontend without Apache shows "Nu am putut încărca datele".
+
+## Steps
+
+### 1. Check the backend (Apache)
+- The repo must be reachable at `C:\xampp\htdocs\pago`. The real code stays in the repo folder (the current working directory), and `htdocs\pago` is a junction that points to it.
+- Check whether it exists:
+  ```powershell
+  Get-Item C:\xampp\htdocs\pago -ErrorAction SilentlyContinue | Select-Object FullName,LinkType,Target
+  ```
+- If it does not exist, create a junction to the local path of the repo (use the real repo path, not a hardcoded one). A junction doesn't need admin rights:
+  ```powershell
+  New-Item -ItemType Junction -Path C:\xampp\htdocs\pago -Target "<repo path>"
+  ```
+- If `C:\xampp\htdocs\pago` exists but is a normal folder, or a junction that points somewhere else, do not delete or replace it. Tell the user and ask what to do.
+- If `C:\xampp\htdocs` doesn't exist, XAMPP is not installed at the default path. Tell the user.
+- Test the API:
+  ```powershell
+  curl.exe -s http://localhost/pago/api/
+  ```
+  It should return JSON with `"name": "Pago LiMa API"`.
+- If Apache does not answer, Claude can't reliably start it. Ask the user to start Apache from the XAMPP Control Panel (`C:\xampp\xampp-control.exe`), then test again.
+
+### 2. Database
+- `api/data/pago.sqlite` is created automatically on the first request, so there is normally nothing to do.
+- Run the seed only if the user wants fresh or reset data, because it overwrites the data:
+  ```powershell
+  C:\xampp\php\php.exe api\seed.php
+  ```
+- For a fixed demo date, set `APP_TODAY=2026-11-20` for Apache or the PHP CLI.
+
+### 3. Frontend
+- If `web/node_modules` is missing, run `npm install` in `web/`.
+- Start the dev server with the preview tool, not with a shell command: `preview_start` with `{name: "web"}` (defined in `.claude/launch.json`, it runs `npm --prefix web run dev` on port 5173). Never start dev servers through Bash or PowerShell.
+- If the repo sits in another folder under htdocs, the server needs `API_PREFIX=/other-folder`.
+
+### 4. Gmail module (check, then ask if not configured)
+- Gmail login is restricted to one account: `allowed_google_email` in `modules/gmail-import/config.json`. If it is empty, every Google login is refused, and the demo account still works.
+- Check whether Google auth is configured, without printing values. Use this check:
+  ```powershell
+  $p = "C:\Proiecte\Pago_hackathon_LiMa\modules\gmail-import\config.json"
+  if (Test-Path $p) { $c = Get-Content $p -Raw | ConvertFrom-Json; "config=yes client_id=" + [bool]$c.google.client_id + " secret=" + [bool]$c.google.client_secret + " python=" + [bool]$c.python_path + " allowed=" + [bool]$c.allowed_google_email } else { "config=no" }
+  ```
+- If `config=no`, or `client_id`, `secret` or `python` is false, Google auth is not set up on this machine. Ask the user with AskUserQuestion: start **without Gmail** (demo login only, Google button will not work) or stop so they can configure it. Do not create or edit `config.json` on your own. If they choose without Gmail, continue to step 5 and say so in the report.
+- If Google auth is configured but `allowed=false`, tell the user that only the demo login works until `allowed_google_email` is set in `config.json`.
+- Setup for a developer who has Google: copy `config.example.json` to `config.json`, fill `google.client_id`, `google.client_secret`, `allowed_google_email` (their own Gmail address) and `python_path` (full path to a Python with the packages from `scripts/requirements.txt`). Apache often can't see `python` from PATH on Windows.
+- Never print the contents of `config.json`, because it can contain secrets.
+
+### 5. Verify
+- Check the dev server logs with `preview_logs` and the browser console for errors.
+- Check that `http://localhost:5173` loads, and that `/api/dashboard` through the proxy returns JSON (look at `read_network_requests`).
+- Report to the user what is running and the URL: http://localhost:5173.
+
+## Common problems
+| Symptom | Cause / fix |
+|---|---|
+| "Nu am putut încărca datele" | Apache is not running, or the junction `C:\xampp\htdocs\pago` is missing |
+| 404 on `/api/...` | Wrong `API_PREFIX` (repo folder name under htdocs) |
+| Port 5173 busy | An old Vite server is running. Use `preview_list` and stop it with `preview_stop` |
+| Gmail scan fails | `python_path` in `config.json` is wrong or the packages are not installed |
+| Data looks wrong | Reset it with `php api\seed.php` (ask the user first) |
+
+
+=== ASSISTANT (2026-11-17T08:25:16.085Z) ===
+[TOOL CALL: mcp__ccd_turn__update_plan] {"items": [{"content": "Check Apache junction C:\\xampp\\htdocs\\pago", "status": "in_progress"}, {"content": "Test API at localhost/pago/api/", "status": "pending"}, {"content": "Check database and seed need", "status": "pending"}, {"content": "Check frontend dependencies", "status": "pending"}, {"content": "Start web dev server on port 5173", "status": "pending"}, {"content": "Check Gmail config without printing values", "status": "pending"}, {"content": "Verify proxy and frontend load", "stat
+
+=== USER (2026-11-17T08:25:16.132Z) ===
+[TOOL RESULT] Plan shown (7 steps).
+
+=== ASSISTANT (2026-11-17T08:25:16.634Z) ===
+[TOOL CALL: PowerShell] {"command": "Get-Item C:\\xampp\\htdocs\\pago -ErrorAction SilentlyContinue | Select-Object FullName,LinkType,Target; if (Test-Path C:\\xampp\\htdocs) { \"htdocs=yes\" } else { \"htdocs=no\" }", "description": "Check whether htdocs junction for the repo exists"}
+
+=== ASSISTANT (2026-11-17T08:25:16.952Z) ===
+[TOOL CALL: Bash] {"command": "curl.exe -s -m 10 http://localhost/pago/api/; echo; echo \"exit=$?\"", "description": "Test PHP API through Apache"}
+
+=== USER (2026-11-17T08:25:18.180Z) ===
+[TOOL RESULT] FullName             LinkType Target                           
+--------             -------- ------                           
+C:\xampp\htdocs\pago Junction {C:\Proiecte\Pago_hackathon_LiMa}
+htdocs=yes
+
+=== USER (2026-11-17T08:25:19.499Z) ===
+[TOOL RESULT] {"name":"Pago LiMa API","today":"2026-11-17"}
+exit=0
+
+=== ASSISTANT (2026-11-17T08:25:21.714Z) ===
+[TOOL CALL: mcp__ccd_turn__update_plan] {"advance": true}
+
+=== USER (2026-11-17T08:25:21.734Z) ===
+[TOOL RESULT] Plan updated: step 2 of 7 is in progress.
+
+=== ASSISTANT (2026-11-17T08:25:22.680Z) ===
+[TOOL CALL: PowerShell] {"command": "Set-Location C:\\Proiecte\\Pago_hackathon_LiMa; if (Test-Path web\\node_modules) { \"node_modules=yes\" } else { \"node_modules=no\" }; if (Test-Path api\\data\\pago.sqlite) { \"db=yes\" } else { \"db=no (created on first request)\" }; $p = \"C:\\Proiecte\\Pago_hackathon_LiMa\\modules\\gmail-import\\config.json\"; if (Test-Path $p) { $c = Get-Content $p -Raw | ConvertFrom-Json; \"config=yes client_id=\" + [bool]$c.google.client_id + \" secret=\" + [bool]$c.google.client_secret + \" 
+
+=== USER (2026-11-17T08:25:25.622Z) ===
+[TOOL RESULT] node_modules=yes
+db=yes
+config=yes client_id=True secret=True python=True allowed=False
+
+=== ASSISTANT (2026-11-17T08:25:28.368Z) ===
+[TOOL CALL: mcp__ccd_turn__update_plan] {"advance": true}
+
+=== USER (2026-11-17T08:25:28.386Z) ===
+[TOOL RESULT] Plan updated: step 3 of 7 is in progress.
+
+=== ASSISTANT (2026-11-17T08:25:28.449Z) ===
+[TOOL CALL: mcp__Claude_Browser__preview_start] {"name": "web"}
+
+=== USER (2026-11-17T08:25:32.268Z) ===
+[TOOL RESULT] {
+  "serverId": "81c576f0-f364-43ca-90dd-2b3833518963",
+  "port": 5173,
+  "name": "web",
+  "reused": false,
+  "previewId": "preview-local_766fcdf8-1972-4d2a-9774-dbc85b11df36",
+  "tabId": "seed"
+}
+Server started on port 5173. Opened tab "seed" at http://localhost:5173. Use tabId "seed" with read_page / computer / navigate; serverId is for preview_stop and preview_logs only.
+
+=== ASSISTANT (2026-11-17T08:25:34.093Z) ===
+[TOOL CALL: mcp__ccd_turn__update_plan] {"advance": true}
+
+=== USER (2026-11-17T08:25:34.119Z) ===
+[TOOL RESULT] Plan updated: step 4 of 7 is in progress.
+
+=== ASSISTANT (2026-11-17T08:25:34.517Z) ===
+[TOOL CALL: Bash] {"command": "curl.exe -s -m 10 -o /dev/null -w \"%{http_code}\\n\" http://localhost:5173/; curl.exe -s -m 10 http://localhost:5173/api/dashboard | head -c 300; echo", "description": "Check frontend and API proxy through Vite"}
+
+=== ASSISTANT (2026-11-17T08:25:34.723Z) ===
+[TOOL CALL: mcp__Claude_Browser__preview_logs] {"serverId": "81c576f0-f364-43ca-90dd-2b3833518963", "level": "error"}
+
+=== USER (2026-11-17T08:25:37.209Z) ===
+[TOOL RESULT] 200
+{"user":{"id":1,"name":"Andrei Popescu","email":"andrei.popescu@example.com"},"today":"2026-11-17","summary":{"to_pay":1258.5,"unpaid_count":6,"overdue_count":1,"overdue_amount":49.0,"month_total":1286.54,"month_paid":77.04},"upcoming":[{"id":71,"period":"2026-10","amount":49.0,"issued_at":"2026-10-
+
+=== USER (2026-11-17T08:25:37.228Z) ===
+[TOOL RESULT] No server errors found.
+
+=== ASSISTANT (2026-11-17T08:25:39.480Z) ===
+[TOOL CALL: mcp__ccd_turn__update_plan] {"advance": true}
+
+=== USER (2026-11-17T08:25:39.497Z) ===
+[TOOL RESULT] Plan updated: step 5 of 7 is in progress.
+
+=== ASSISTANT (2026-11-17T08:25:40.210Z) ===
+[TOOL CALL: mcp__ccd_turn__wrap_up] {"recap": "Aplicația rulează: API-ul PHP răspunde prin Apache (junction-ul C:\\xampp\\htdocs\\pago indică spre repo), iar frontend-ul Vite e pe http://localhost:5173 cu proxy-ul /api funcțional. Gmail are config Google, dar allowed_google_email este gol, deci doar login-ul demo funcționează. Nu am verificat vizual pagina în browser."}
+
+=== USER (2026-11-17T08:25:40.229Z) ===
+[TOOL RESULT] Nothing is pending, so the app draws no box; the recap is the session's status. Do not call wrap_up again this turn; the advice that follows is for your next call. recap is two or three sentences (about 300 characters); this one ran 320. Keep it to what is now true and where it stands. Your closing message is your answer to the user: write it now, as the last thing you say this turn.
+
+=== ASSISTANT (2026-11-17T08:25:44.256Z) ===
+Aplicația pornește, iar frontend-ul și API-ul sunt verificate.
+
+- **Backend (Apache):** `C:\xampp\htdocs\pago` este un junction spre repo, iar `http://localhost/pago/api/` răspunde cu `"name": "Pago LiMa API"`.
+- **Baza de date:** `api/data/pago.sqlite` există deja. Nu am rulat seed-ul, ca să nu suprascriu datele.
+- **Frontend:** `node_modules` există și serverul `web` rulează pe [http://localhost:5173](http://localhost:5173). Nu am găsit erori în logurile serverului.
+- **Proxy:** `/api/dashboard` prin Vite returnează JSON, deci proxy-ul funcționează.
+- **Gmail:** `config.json` are `client_id`, `client_secret` și `python_path`, dar `allowed_google_email` este gol. Până îl completezi, funcționează doar login-ul demo. Nu am modificat fișierul.
+
+Două lucruri de reținut:
+- Data din API este 2026-11-17, nu data fixă de demo 2026-11-20. Pentru a o fixa, setează `APP_TODAY=2026-11-20` în mediul Apache.
+- Nu am deschis pagina în browser, deci nu am verificat vizual interfața.
