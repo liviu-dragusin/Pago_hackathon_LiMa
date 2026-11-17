@@ -49,6 +49,13 @@ function auth_google_callback(): void
         $fail('error');
     }
 
+    // Doar contul configurat (allowed_google_email din config.json) are voie să se conecteze prin Google.
+    // Dacă nu e configurat, refuzăm orice cont (fail closed) și nu salvăm tokenul.
+    $allowed = strtolower(trim((string) (config()['allowed_google_email'] ?? '')));
+    if ($allowed === '' || strtolower((string) $info['email']) !== $allowed) {
+        $fail('forbidden');
+    }
+
     $pdo = db();
     $pdo->prepare('INSERT INTO users (email) VALUES (?) ON CONFLICT(email) DO NOTHING')->execute([$info['email']]);
     $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ?');

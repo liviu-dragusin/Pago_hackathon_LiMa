@@ -22,11 +22,13 @@ GMAIL_QUERY = (
 )
 
 
-def build_query(sender: str | None = None) -> str:
-    """Interogarea Gmail. Cu `sender`: doar mesajele primite de la acea adresă, fără alte filtre
-    (titlul conține numele furnizorului, nu neapărat cuvântul „factura”). Fără: căutarea generală."""
-    if sender:
-        return f"from:{sender}"
+def build_query(senders: list[str] | None = None) -> str:
+    """Interogarea Gmail: căutarea generală de facturi PLUS tot ce vine de la expeditorii din lista albă
+    (titlul lor conține numele furnizorului, nu neapărat cuvântul „factura”). Facturile de la alți
+    expeditori sunt aduse tot, ca să poată fi flaguite ca suspecte."""
+    if senders:
+        trusted = " ".join(f"from:{s}" for s in senders)
+        return f"{{{trusted}}} OR ({GMAIL_QUERY})"
     return GMAIL_QUERY
 
 
@@ -82,8 +84,8 @@ def service_from_refresh_token(cfg: dict, refresh_token: str):
     return build("gmail", "v1", credentials=creds, cache_discovery=False)
 
 
-def list_message_ids(service, max_results: int, sender: str | None = None) -> list[str]:
-    query = build_query(sender)
+def list_message_ids(service, max_results: int, senders: list[str] | None = None) -> list[str]:
+    query = build_query(senders)
     ids: list[str] = []
     page_token = None
     while len(ids) < max_results:

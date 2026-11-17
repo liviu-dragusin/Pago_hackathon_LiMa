@@ -29,14 +29,31 @@ function db(): PDO
         $pdo->exec('PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;');
         $pdo->exec((string) file_get_contents(ROOT_DIR . '/data/schema.sql'));
         // Migrare: bazele create înainte de coloana invoice_pdf_path (SQLite nu are ADD COLUMN IF NOT EXISTS).
-        foreach ([['discovered_providers', 'invoice_pdf_path'], ['scan_jobs', 'detected']] as [$table, $column]) {
+        foreach ([
+            ['discovered_providers', 'invoice_pdf_path', 'TEXT'], ['scan_jobs', 'detected', 'TEXT'],
+            ['discovered_providers', 'sender_email', 'TEXT'],
+            ['discovered_providers', 'security_flag', 'INTEGER DEFAULT 0'],
+            ['discovered_providers', 'security_reasons', 'TEXT'],
+        ] as [$table, $column, $type]) {
             $cols = array_column($pdo->query("PRAGMA table_info($table)")->fetchAll(), 'name');
             if (!in_array($column, $cols, true)) {
-                $pdo->exec("ALTER TABLE $table ADD COLUMN $column TEXT");
+                $pdo->exec("ALTER TABLE $table ADD COLUMN $column $type");
             }
         }
     }
     return $pdo;
+}
+
+/** Lista albă de expeditori (aceeași logică ca scripts/security.py). */
+function trusted_senders(): array
+{
+    $file = ROOT_DIR . '/whitelist.txt';
+    $raw = is_file($file) ? array_map(fn($l) => explode('#', $l, 2)[0], file($file, FILE_IGNORE_NEW_LINES)) : [];
+    if (!array_filter(array_map('trim', $raw))) {
+        $raw = config()['trusted_senders'] ?? (config()['sender_filter'] ?? '') ?: ['contact@mateimarius.ro'];
+    }
+    $list = array_map(fn($s) => strtolower(trim((string) $s)), (array) $raw);
+    return array_values(array_filter($list));
 }
 
 function session_boot(): void
