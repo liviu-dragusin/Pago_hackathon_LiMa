@@ -1,0 +1,13 @@
+{
+  "_nota": "Registru de furnizori de incredere. VERIFICA domeniile inainte de productie. 'domenii' = domenii oficiale de email/plata; 'nume' = cum apare in numele expeditorului sau subiect; 'iban' = IBAN-uri publice cunoscute (optional).",
+  "furnizori": [
+    {"slug": "enel",     "nume": ["enel"],                "domenii": ["enel.ro"],               "iban": ["RO49AAAA1B31007593840000"]},
+    {"slug": "digi",     "nume": ["digi", "rcs"],         "domenii": ["digi.ro", "rcs-rds.ro"], "iban": []},
+    {"slug": "apanova",  "nume": ["apa nova", "apanova"], "domenii": ["apanova.ro"],            "iban": []},
+    {"slug": "engie",    "nume": ["engie"],               "domenii": ["engie.ro"],              "iban": []},
+    {"slug": "eon",      "nume": ["e.on", "eon"],         "domenii": ["eon.ro"],                "iban": []},
+    {"slug": "vodafone", "nume": ["vodafone"],            "domenii": ["vodafone.ro"],           "iban": []},
+    {"slug": "orange",   "nume": ["orange"],              "domenii": ["orange.ro"],             "iban": []},
+    {"slug": "telekom",  "nume": ["telekom"],             "domenii": ["telekom.ro"],            "iban": []}
+  ]
+}

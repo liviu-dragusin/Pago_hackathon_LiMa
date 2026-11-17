@@ -1,0 +1,9 @@
+From: Enel Energie <facturi@enel-energie-plata.com>
+Reply-To: plati@gmail.com
+To: demo@pago.local
+Subject: URGENT: Factura Enel - deconectare in 24 ore
+Authentication-Results: mx.google.com; spf=fail smtp.mailfrom=enel-energie-plata.com; dkim=none; dmarc=fail header.from=enel-energie-plata.com
+Content-Type: text/html; charset=utf-8
+
+<p>Plateste acum la <a href="http://bit.ly/abc123">www.enel.ro/plata</a>.</p>
+<p>IBAN: RO49AAAA1B31007593840001</p>
