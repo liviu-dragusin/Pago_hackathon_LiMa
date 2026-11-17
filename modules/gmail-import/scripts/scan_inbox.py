@@ -27,6 +27,7 @@ for _stream in (sys.stdout, sys.stderr):
 import extractor  # noqa: E402
 import gmail_client  # noqa: E402
 import matcher  # noqa: E402
+import security  # noqa: E402
 
 DB_PATH = ROOT / "data" / "app.sqlite"
 CONFIG_PATH = ROOT / "config.json"
@@ -59,13 +60,6 @@ def update_job(conn: sqlite3.Connection, job_id: int, **fields) -> None:
     conn.commit()
 
 
-def trusted_sender(job: sqlite3.Row, cfg: dict) -> str | None:
-    """Adresa de la care preluăm facturile (config.json -> sender_filter). Doar la Gmail real."""
-    if job["mode"] == "demo":
-        return None
-    return (cfg.get("sender_filter") or "").strip().lower() or None
-
-
 def build_source(job: sqlite3.Row, conn: sqlite3.Connection, cfg: dict):
     """Returnează (lista de elemente, funcția care aduce un mesaj după element)."""
     if job["mode"] == "demo":
@@ -75,7 +69,7 @@ def build_source(job: sqlite3.Row, conn: sqlite3.Connection, cfg: dict):
     if row is None:
         raise RuntimeError("Lipsește autorizarea Gmail pentru acest utilizator.")
     service = gmail_client.service_from_refresh_token(cfg, row["refresh_token"])
-    ids = gmail_client.list_message_ids(service, MAX_EMAILS, trusted_sender(job, cfg))
+    ids = gmail_client.list_message_ids(service, MAX_EMAILS, security.trusted_senders(cfg))
     return ids, lambda message_id: gmail_client.get_message(service, message_id)
 
 
@@ -95,18 +89,26 @@ def store_invoice_pdfs(providers: list[dict], job: sqlite3.Row) -> None:
 
 def save_providers(conn: sqlite3.Connection, job_id: int, providers: list[dict]) -> None:
     for p in providers:
-        conn.execute(
+        cursor = conn.execute(
             """INSERT INTO discovered_providers
                (job_id, catalog_id, name, cui, iban, iban_valid, client_code, category,
                 last_amount, currency, last_due_date, invoice_count, confidence, source_message_id,
-                invoice_pdf_path)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                invoice_pdf_path, sender_email, security_flag, security_reasons)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 job_id, p["catalog_id"], p["name"], p["cui"], p["iban"], int(p["iban_valid"]),
                 p["client_code"], p["category"], p["last_amount"], p["currency"], p["last_due_date"],
                 p["invoice_count"], p["confidence"], p["source_message_id"], p["invoice_pdf_path"],
+                p["sender_email"], int(p["flagged"]), json.dumps(p["flag_reasons"], ensure_ascii=False),
             ),
         )
+        for inv in p.get("invoices", []):
+            conn.execute(
+                """INSERT INTO discovered_invoices
+                   (discovered_id, invoice_number, amount, currency, issued_at, due_date)
+                   VALUES (?, ?, ?, ?, ?, ?)""",
+                (cursor.lastrowid, inv["invoice_number"], inv["amount"], inv["currency"], inv["issued_at"], inv["due_date"]),
+            )
     conn.commit()
 
 
@@ -120,9 +122,10 @@ def run(job_id: int, demo: bool) -> None:
     update_job(conn, job_id, status="running", started_at=now())
     try:
         items, fetch = build_source(job, conn, cfg)
-        sender = trusted_sender(job, cfg)
-        if sender:
-            print(f"Preiau doar emailurile de la {sender}; furnizorul se citește din titlu.")
+        whitelist = security.trusted_senders(cfg)
+        catalog = conn.execute("SELECT * FROM provider_catalog").fetchall()
+        catalog_names = [r["name"] for r in catalog]
+        print(f"Lista albă de expeditori: {', '.join(whitelist)}. Facturile de la alte adrese sunt flaguite.")
         update_job(conn, job_id, total_emails=len(items))
 
         invoices = []
@@ -131,7 +134,7 @@ def run(job_id: int, demo: bool) -> None:
         detected: list[dict] = []  # furnizorii găsiți până acum; UI-ul îi afișează în timp real
         for index, item in enumerate(items, start=1):
             if job["mode"] == "demo":
-                time.sleep(0.8)  # demo e instantaneu: încetinim ca detectarea live să se vadă în UI
+                time.sleep(0.4)  # demo e instantaneu: încetinim ca detectarea live să se vadă în UI
             try:
                 message = fetch(item)
             except gmail_client.QuotaExceeded:
@@ -139,19 +142,31 @@ def run(job_id: int, demo: bool) -> None:
                 note = f"Scanare parțială: limita Gmail a fost atinsă după {index - 1} din {len(items)} emailuri."
                 print(note)
                 break
-            if (
-                message is not None
-                and matcher.is_from_sender(message, sender)
-                and matcher.is_candidate(message)
-                and (sender or not matcher.is_online_store(message))
-            ):
-                invoice = extractor.extract_invoice(message, cfg, trusted_sender=bool(sender))
+            if message is not None and matcher.is_candidate(message):
+                check = security.check_sender(message, whitelist, catalog_names)
+                # Magazinele online nu sunt facturi pentru Pago; expeditorul de încredere nu se filtrează.
+                skip = not check["trusted"] and matcher.is_online_store(message)
+                # Doar la Gmail real, expeditorul de încredere pune numele furnizorului în titlu.
+                invoice = None if skip else extractor.extract_invoice(
+                    message, cfg, trusted_sender=check["trusted"] and job["mode"] != "demo"
+                )
+                if invoice and not check["trusted"]:
+                    if not security.looks_like_bill(message, invoice, catalog):
+                        invoice = None  # expeditor neaprobat, dar nu se dă drept factură: nu flaguim
+                    elif not (invoice.get("amount") or invoice.get("iban") or invoice.get("category")):
+                        # Fără date în corp: arătăm furnizorul pe care îl pretinde titlul, nu numele expeditorului.
+                        invoice["provider_name"] = matcher.provider_from_subject(message["subject"]) or invoice["provider_name"]
                 if invoice:
+                    invoice["security"] = check
                     invoices.append(invoice)
                     key = matcher.normalize_name(invoice["provider_name"]) or invoice["provider_name"]
+                    key = f"{key}|{check['sender']}" if not check["trusted"] else key
                     if key not in seen:
                         seen.add(key)
-                        detected.append({"name": invoice["provider_name"], "category": invoice.get("category")})
+                        detected.append({
+                            "name": invoice["provider_name"], "category": invoice.get("category"),
+                            "flagged": not check["trusted"],
+                        })
                         update_job(conn, job_id, detected=json.dumps(detected, ensure_ascii=False), processed=index)
             if index % 3 == 0 or index == len(items):
                 update_job(conn, job_id, processed=index)

@@ -79,12 +79,6 @@ export const INTENTS = [
     resolve: () => ({ text: 'Te duc la plățile split: cine ți-a dat banii și cine mai are de dat.', to: '/split' }),
   },
   {
-    id: 'rewards',
-    keys: ['punct', 'badge', 'nivel', 'serie', 'premi'],
-    strong: ['recompens'],
-    resolve: () => ({ text: 'Te duc la recompense: puncte, nivel și badge-uri.', to: '/recompense' }),
-  },
-  {
     id: 'home',
     keys: ['acasa', 'dashboard', 'principal', 'inceput', 'sumar', 'rezumat'],
     strong: [],
@@ -110,7 +104,6 @@ export const SUGGESTIONS = [
   'Cum văd estimarea de buget?',
   'Vreau să adaug furnizori',
   'Cine îmi datorează bani?',
-  'Câte puncte am?',
 ]
 
 /** Returnează răspunsul pentru un mesaj sau un răspuns de tip „nu am înțeles”. */

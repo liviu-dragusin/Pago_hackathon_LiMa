@@ -2,12 +2,12 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/helpers.php';
-require_once __DIR__ . '/lib/rewards.php';
 require_once __DIR__ . '/lib/predict.php';
 require_once __DIR__ . '/lib/weather.php';
 require_once __DIR__ . '/lib/db.php';
 require_once __DIR__ . '/lib/handlers.php';
 require_once __DIR__ . '/lib/catalog.php';
+require_once __DIR__ . '/lib/import.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
@@ -29,13 +29,14 @@ $routes = [
     ['GET',  '#^/splits$#',                   'h_splits'],
     ['POST', '#^/splits/(\d+)/bills$#',       'h_split_bill'],
     ['POST', '#^/splits/shares/(\d+)/settle$#', 'h_settle_share'],
-    ['GET',  '#^/rewards$#',                  'h_rewards'],
     // Modul harta furnizorilor
     ['GET',  '#^/catalog$#',                  'h_catalog'],
     ['GET',  '#^/catalog/localities/([A-Z]{1,2})$#', 'h_localities'],
     ['POST', '#^/accounts$#',                 'h_add_account'],
     ['GET',  '#^/contracts$#',                'h_contracts'],
     ['POST', '#^/contracts$#',                'h_create_contract'],
+    // Puntea cu modulul Gmail: furnizorii și facturile confirmate devin date reale în aplicație
+    ['POST', '#^/import/gmail$#',             'h_import_gmail'],
 ];
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';

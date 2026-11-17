@@ -9,7 +9,6 @@ import Dashboard from './pages/Dashboard'
 import Bills from './pages/Bills'
 import Budget from './pages/Budget'
 import Split from './pages/Split'
-import Rewards from './pages/Rewards'
 import { ProviderMapPage } from './modules/provider-map'
 import { AuthGate } from './modules/auth'
 
@@ -25,7 +24,6 @@ createRoot(document.getElementById('root')).render(
             <Route path="facturi" element={<Bills />} />
             <Route path="buget" element={<Budget />} />
             <Route path="split" element={<Split />} />
-            <Route path="recompense" element={<Rewards />} />
             <Route path="furnizori" element={<ProviderMapPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

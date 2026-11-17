@@ -8,5 +8,6 @@
   "python_path": "python",
   "frontend_url": "http://localhost:5173/importa",
   "demo_email": "demo@pago.local",
-  "sender_filter": ""
+  "allowed_google_email": "",
+  "trusted_senders": ["contact@mateimarius.ro"]
 }

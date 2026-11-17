@@ -1,0 +1,3 @@
+# Expeditori de încredere pentru importul facturilor din Gmail (o adresă pe linie).
+# Facturile primite de la orice altă adresă sunt flaguite ca posibil malițioase.
+contact@mateimarius.ro

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { AlertTriangle, CheckCircle2, FileText, Mail, ShieldCheck } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, FileText, Mail, ShieldAlert, ShieldCheck } from 'lucide-react'
 
 // Portat din modules/gmail-import/frontend (vanilla JS) în React, cu aceleași rute API:
 // /api/auth/google/start, /api/scan/start, /api/scan/status, /api/providers/discovered, /api/providers/confirm.
@@ -11,6 +11,7 @@ export const AUTH_MESSAGES = {
   state: 'Sesiunea de autorizare a expirat. Încearcă din nou.',
   norefresh: 'Google nu a returnat o autorizare reînnoibilă. Încearcă din nou și acceptă accesul.',
   error: 'Conectarea la Gmail a eșuat. Verifică configurarea serverului.',
+  forbidden: 'Acest cont Google nu are acces la aplicație. Te poți conecta doar cu contul configurat.',
 }
 
 async function call(path, options = {}) {
@@ -32,8 +33,11 @@ export default function GmailImportPage({ autoStart = null, onExit = null }) {
   const [jobId, setJobId] = useState(null)
   const [job, setJob] = useState(null)
   const [providers, setProviders] = useState([])
+  const [whitelist, setWhitelist] = useState([])
   const [selected, setSelected] = useState(() => new Set())
   const [added, setAdded] = useState(0)
+  const [blocked, setBlocked] = useState(0)
+  const [billCount, setBillCount] = useState(0)
   const [message, setMessage] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -57,9 +61,11 @@ export default function GmailImportPage({ autoStart = null, onExit = null }) {
 
   async function loadReview(id) {
     try {
-      const { providers: list } = await call(`/providers/discovered?job_id=${id}`)
+      const { providers: list, whitelist: trusted = [] } = await call(`/providers/discovered?job_id=${id}`)
       setProviders(list)
-      setSelected(new Set(list.map((p) => p.id)))
+      setWhitelist(trusted)
+      // Facturile flaguite (expeditor în afara listei albe) nu sunt bifate implicit.
+      setSelected(new Set(list.filter((p) => !p.flagged).map((p) => p.id)))
       setStep(list.length ? 'review' : 'empty')
     } catch (e) {
       fail(e.message)
@@ -130,7 +136,11 @@ export default function GmailImportPage({ autoStart = null, onExit = null }) {
         method: 'POST',
         body: JSON.stringify({ job_id: jobId, ids: [...selected] }),
       })
+      // Furnizorii confirmați devin conturi și facturi reale în aplicație (dashboard, estimări, buget).
+      const imported = await call('/import/gmail', { method: 'POST', body: JSON.stringify({ job_id: jobId }) })
       setAdded(data.added)
+      setBlocked(data.blocked ?? 0)
+      setBillCount(imported.bills ?? 0)
       setStep('done')
     } catch (e) {
       setMessage(e.message)
@@ -162,6 +172,7 @@ export default function GmailImportPage({ autoStart = null, onExit = null }) {
       {step === 'review' && (
         <Review
           providers={providers}
+          whitelist={whitelist}
           selected={selected}
           onToggle={toggle}
           onConfirm={confirm}
@@ -183,7 +194,16 @@ export default function GmailImportPage({ autoStart = null, onExit = null }) {
             <IconBox><CheckCircle2 className="h-6 w-6" /></IconBox>
             <div>
               <p className="text-lg font-bold">Gata! Ai adăugat {added} {added === 1 ? 'furnizor' : 'furnizori'}</p>
-              <p className="mt-1 text-[var(--muted)]">Facturile lor vor apărea în Pago, cu scadențele urmărite automat.</p>
+              <p className="mt-1 text-[var(--muted)]">
+                Am importat {billCount} {billCount === 1 ? 'factură' : 'facturi'} în Pago: scadențele sunt urmărite automat, iar estimarea
+                următoarei facturi se calculează pe istoricul lor.
+              </p>
+              {blocked > 0 && (
+                <p className="mt-2 flex items-center gap-2 text-sm font-semibold text-red-600">
+                  <ShieldAlert className="h-4 w-4 shrink-0" />
+                  {blocked} {blocked === 1 ? 'factură marcată malițioasă nu a fost adăugată' : 'facturi marcate malițioase nu au fost adăugate'}.
+                </p>
+              )}
             </div>
           </div>
           {onExit ? <Action onClick={() => onExit(true)}>Intră în aplicație</Action> : <Action href="/">Mergi la acasă</Action>}
@@ -276,14 +296,20 @@ function Progress({ job }) {
         </p>
 
         <ul className="mt-5 flex w-full max-w-sm flex-col items-center gap-2" aria-live="polite">
-          {detected.map((d) => (
+          {detected.map((d, i) => (
             <li
-              key={d.name}
+              key={`${d.name}-${d.flagged ? 'flag' : 'ok'}-${i}`}
               className="pago-pop flex w-full items-center justify-center gap-2 rounded-[14px] bg-[var(--surface-2)] px-4 py-2.5 ring-1 ring-[var(--line)]"
             >
-              <CheckCircle2 className="h-5 w-5 shrink-0 text-[var(--accent)]" />
+              {d.flagged ? (
+                <ShieldAlert className="h-5 w-5 shrink-0 text-red-600" />
+              ) : (
+                <CheckCircle2 className="h-5 w-5 shrink-0 text-[var(--accent)]" />
+              )}
               <span className="truncate font-semibold">{d.name}</span>
-              <span className="shrink-0 text-sm text-[var(--muted)]">detectat{d.category ? ` · ${d.category}` : ''}</span>
+              <span className={`shrink-0 text-sm ${d.flagged ? 'font-semibold text-red-600' : 'text-[var(--muted)]'}`}>
+                {d.flagged ? 'posibil malițios' : `detectat${d.category ? ` · ${d.category}` : ''}`}
+              </span>
             </li>
           ))}
         </ul>
@@ -293,7 +319,7 @@ function Progress({ job }) {
   )
 }
 
-function Review({ providers, selected, onToggle, onConfirm, busy, message, onSkip }) {
+function Review({ providers, whitelist, selected, onToggle, onConfirm, busy, message, onSkip }) {
   return (
     <Panel>
       <p className="font-semibold">Am găsit {providers.length} furnizori în emailurile tale</p>
@@ -303,7 +329,9 @@ function Review({ providers, selected, onToggle, onConfirm, busy, message, onSki
         {providers.map((p) => (
           <label
             key={p.id}
-            className="flex cursor-pointer gap-3 rounded-[14px] border border-[var(--line)] p-3 hover:bg-[var(--surface-2)]"
+            className={`flex cursor-pointer gap-3 rounded-[14px] border p-3 hover:bg-[var(--surface-2)] ${
+              p.flagged ? 'border-red-300 bg-red-50/60' : 'border-[var(--line)]'
+            }`}
           >
             <input
               type="checkbox"
@@ -314,30 +342,44 @@ function Review({ providers, selected, onToggle, onConfirm, busy, message, onSki
             <span className="min-w-0 flex-1">
               <span className="flex items-center gap-2">
                 <span className="truncate font-semibold">{p.name}</span>
-                <span
-                  className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${
-                    p.catalog_id ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
-                  }`}
-                >
-                  {p.catalog_id ? 'din catalog Pago' : 'furnizor nou'}
+                {p.flagged ? (
+                  <span className="flex shrink-0 items-center gap-1 rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white">
+                    <ShieldAlert className="h-3.5 w-3.5" /> Posibil malițioasă
+                  </span>
+                ) : (
+                  <span className="flex shrink-0 items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700">
+                    <ShieldCheck className="h-3.5 w-3.5" /> Expeditor verificat
+                  </span>
+                )}
+              </span>
+              {p.sender_email && !p.flagged && (
+                <span className="mt-1 block text-xs text-[var(--muted)]">Expeditor: {p.sender_email}</span>
+              )}
+              {p.flagged && (
+                <span className="mt-1 block text-sm font-semibold text-red-600">
+                  Posibil malițios, nu se recunoaște expeditorul
                 </span>
-              </span>
-              <span className="mt-1 block text-sm text-[var(--muted)]">
-                {p.category || 'altele'}
-                {p.client_code ? ` · cod client ${p.client_code}` : ''}
-              </span>
-              <span className="mt-1 block text-sm">
-                Ultima factură: <b>{p.last_amount != null ? Number(p.last_amount).toFixed(2) : '–'} {p.currency || 'RON'}</b>
-                {p.last_due_date ? ` · scadentă ${p.last_due_date}` : ''}
-                {` · ${p.invoice_count} ${p.invoice_count === 1 ? 'factură' : 'facturi'}`}
-              </span>
+              )}
+              {!p.flagged && (
+                <>
+                  <span className="mt-1 block text-sm text-[var(--muted)]">
+                    {p.category || 'altele'}
+                    {p.client_code ? ` · cod client ${p.client_code}` : ''}
+                  </span>
+                  <span className="mt-1 block text-sm">
+                    Ultima factură: <b>{p.last_amount != null ? Number(p.last_amount).toFixed(2) : '–'} {p.currency || 'RON'}</b>
+                    {p.last_due_date ? ` · scadentă ${p.last_due_date}` : ''}
+                    {` · ${p.invoice_count} ${p.invoice_count === 1 ? 'factură' : 'facturi'}`}
+                  </span>
+                </>
+              )}
               {p.iban && !p.iban_valid && (
                 <span className="mt-1 flex items-center gap-1 text-xs text-red-600">
                   <AlertTriangle className="h-3.5 w-3.5" /> IBAN-ul din factură nu s-a putut verifica. Confirmă-l înainte de plată.
                 </span>
               )}
             </span>
-            {p.has_invoice_pdf && (
+            {!!p.has_invoice_pdf && (
               <button
                 type="button"
                 onClick={(e) => {

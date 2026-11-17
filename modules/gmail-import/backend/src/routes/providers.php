@@ -17,15 +17,23 @@ function providers_discovered(): void
     $stmt = $pdo->prepare(
         'SELECT d.id, d.name, d.cui, d.iban, d.iban_valid, d.client_code, d.category, d.last_amount, d.currency,
                 d.last_due_date, d.invoice_count, d.confidence, d.status, d.catalog_id, c.logo,
-                (d.invoice_pdf_path IS NOT NULL) AS has_invoice_pdf
+                (d.invoice_pdf_path IS NOT NULL) AS has_invoice_pdf,
+                d.sender_email, d.security_flag, d.security_reasons
          FROM discovered_providers d
          JOIN scan_jobs j ON j.id = d.job_id
          LEFT JOIN provider_catalog c ON c.id = d.catalog_id
          WHERE d.job_id = ? AND j.user_id = ?
-         ORDER BY CASE d.status WHEN \'proposed\' THEN 0 ELSE 1 END, d.invoice_count DESC, d.name'
+         ORDER BY d.security_flag DESC, CASE d.status WHEN \'proposed\' THEN 0 ELSE 1 END, d.invoice_count DESC, d.name'
     );
     $stmt->execute([$jobId, $uid]);
-    json_out(['job_id' => $jobId, 'providers' => $stmt->fetchAll()]);
+    $providers = $stmt->fetchAll();
+    foreach ($providers as &$p) {
+        $p['flagged'] = (int) ($p['security_flag'] ?? 0) === 1;
+        $p['flag_reasons'] = json_decode((string) ($p['security_reasons'] ?? ''), true) ?: [];
+        unset($p['security_flag'], $p['security_reasons']);
+    }
+    unset($p);
+    json_out(['job_id' => $jobId, 'providers' => $providers, 'whitelist' => trusted_senders()]);
 }
 
 /** GET /api/providers/invoice?id=N – PDF-ul ultimei facturi a furnizorului propus (doar al utilizatorului). */
@@ -73,6 +81,17 @@ function providers_confirm(): void
         json_out(['error' => 'Scanare inexistentă.'], 404);
     }
 
+    // Facturile flaguite (expeditor în afara listei albe) nu intră niciodată în aplicație, chiar dacă au fost bifate.
+    $blocked = 0;
+    if ($ids) {
+        $in = implode(',', array_fill(0, count($ids), '?'));
+        $flagged = $pdo->prepare("SELECT id FROM discovered_providers WHERE job_id = ? AND security_flag = 1 AND id IN ($in)");
+        $flagged->execute([$jobId, ...$ids]);
+        $flaggedIds = array_map('intval', $flagged->fetchAll(PDO::FETCH_COLUMN));
+        $blocked = count($flaggedIds);
+        $ids = array_values(array_diff($ids, $flaggedIds));
+    }
+
     $placeholders = $ids ? implode(',', array_fill(0, count($ids), '?')) : '0'; // nimic bifat => toate respinse
     $pdo->beginTransaction();
     $pdo->prepare("UPDATE discovered_providers SET status = 'rejected' WHERE job_id = ? AND status = 'proposed' AND id NOT IN ($placeholders)")
@@ -91,5 +110,5 @@ function providers_confirm(): void
         $count++;
     }
     $pdo->commit();
-    json_out(['added' => $count]);
+    json_out(['added' => $count, 'blocked' => $blocked]);
 }

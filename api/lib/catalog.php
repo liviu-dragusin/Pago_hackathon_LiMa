@@ -6,12 +6,9 @@ declare(strict_types=1);
  * Datele statice sunt în api/data/catalog/*.json (generate/curate o dată, comise în repo).
  */
 
-const POINTS_NEW_PROVIDER = 15;
-const POINTS_CONTRACT     = 25;
-
 const CATEGORY_COLORS = [
     'energie' => '#f59e0b', 'gaz' => '#ef4444', 'apa' => '#0ea5e9', 'comunicatii' => '#8b5cf6',
-    'salubrizare' => '#84cc16', 'intretinere' => '#10b981', 'diverse' => '#64748b',
+    'internet' => '#8b5cf6', 'telefonie' => '#f97316', 'salubrizare' => '#84cc16', 'intretinere' => '#10b981', 'diverse' => '#64748b',
 ];
 
 function catalog(): array
@@ -129,14 +126,10 @@ function h_add_account(): array
         ->execute([USER_ID, $providerId, $clientCode, $alias, $county, today()]);
     $accountId = (int) $pdo->lastInsertId();
 
-    add_points($pdo, USER_ID, POINTS_NEW_PROVIDER, "Furnizor nou adăugat · {$provider['name']}");
     $pdo->commit();
 
     return [
-        'account'        => array_values(array_filter(connected_accounts(), fn($a) => (int) $a['id'] === $accountId))[0],
-        'points_awarded' => POINTS_NEW_PROVIDER,
-        'new_badges'     => check_badges($pdo, USER_ID),
-        'rewards'        => rewards_summary($pdo, USER_ID),
+        'account' => array_values(array_filter(connected_accounts(), fn($a) => (int) $a['id'] === $accountId))[0],
     ];
 }
 
@@ -172,12 +165,9 @@ function h_create_contract(): array
         trim($data['address']), trim($data['full_name']), trim($data['phone']), trim((string) ($data['notes'] ?? '')) ?: null, today(),
     ]);
     $id = (int) $pdo->lastInsertId();
-    add_points($pdo, USER_ID, POINTS_CONTRACT, "Cerere de contract · {$provider['name']}");
     $pdo->commit();
 
     return [
-        'contract'       => array_values(array_filter(h_contracts(), fn($c) => (int) $c['id'] === $id))[0],
-        'points_awarded' => POINTS_CONTRACT,
-        'new_badges'     => check_badges($pdo, USER_ID),
+        'contract' => array_values(array_filter(h_contracts(), fn($c) => (int) $c['id'] === $id))[0],
     ];
 }

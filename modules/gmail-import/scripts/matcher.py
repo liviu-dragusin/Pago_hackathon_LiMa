@@ -2,7 +2,7 @@
 import re
 import sqlite3
 import unicodedata
-from email.utils import parseaddr
+from email.utils import parseaddr, parsedate_to_datetime
 
 KEYWORDS = re.compile(r"factur|invoice|chitan", re.IGNORECASE)
 NAME_STOPWORDS = {"sa", "srl", "s", "a", "romania", "ro", "the", "de"}
@@ -111,6 +111,19 @@ def _match_catalog(invoice: dict, catalog: list[sqlite3.Row]):
     return None
 
 
+def _issued_at(inv: dict) -> str | None:
+    """Data emiterii = data emailului (YYYY-MM-DD); dacă lipsește sau nu se poate citi, rămâne goală."""
+    if inv.get("issue_date"):
+        return inv["issue_date"]  # data din factură, mai exactă decât a emailului
+    raw = inv.get("email_date")
+    if not raw:
+        return None
+    try:
+        return parsedate_to_datetime(raw).date().isoformat()
+    except (TypeError, ValueError):
+        return raw[:10] if re.match(r"\d{4}-\d{2}-\d{2}", raw) else None
+
+
 def group_invoices(invoices: list[dict], conn: sqlite3.Connection) -> list[dict]:
     """Grupează facturile pe furnizor și alege ultima factură (scadența cea mai recentă)."""
     catalog = conn.execute("SELECT * FROM provider_catalog").fetchall()
@@ -119,14 +132,26 @@ def group_invoices(invoices: list[dict], conn: sqlite3.Connection) -> list[dict]
     for inv in invoices:
         catalog_row = _match_catalog(inv, catalog)
         key = (catalog_row["name"] if catalog_row else normalize_name(inv.get("provider_name"))) or "necunoscut"
+        sec = inv.get("security") or {"sender": None, "trusted": True, "reasons": []}
+        if not sec["trusted"]:
+            # Facturile de la expeditori neaprobați nu se amestecă cu furnizorul real: rămân separate și flaguite.
+            key = f"{key}|neaprobat|{sec['sender']}"
         group = groups.setdefault(key, {
             "catalog_id": catalog_row["id"] if catalog_row else None,
             "name": catalog_row["name"] if catalog_row else (inv.get("provider_name") or key),
             "cui": None, "iban": None, "client_code": "", "category": None,
             "last_amount": None, "currency": "RON", "last_due_date": None,
-            "invoice_numbers": set(), "confidences": [], "source_message_id": None, "pdf": None,
+            "invoice_numbers": set(), "invoices": {}, "confidences": [], "source_message_id": None, "pdf": None,
+            "sender_email": sec["sender"], "flagged": not sec["trusted"], "flag_reasons": sec["reasons"],
         })
-        group["invoice_numbers"].add(inv.get("invoice_number") or inv["source_message_id"])
+        number = inv.get("invoice_number") or inv["source_message_id"]
+        group["invoice_numbers"].add(number)
+        if inv.get("amount") is not None:
+            # Toate facturile găsite (nu doar ultima): din ele se construiește istoricul folosit la predicție.
+            group["invoices"][number] = {
+                "invoice_number": number, "amount": inv["amount"], "currency": inv.get("currency") or "RON",
+                "due_date": inv.get("due_date") or None, "issued_at": _issued_at(inv),
+            }
         group["confidences"].append(inv.get("confidence") or 0.0)
         group["cui"] = group["cui"] or inv.get("cui")
         group["iban"] = group["iban"] or inv.get("iban")
@@ -161,6 +186,10 @@ def group_invoices(invoices: list[dict], conn: sqlite3.Connection) -> list[dict]
             "invoice_count": len(group["invoice_numbers"]),
             "confidence": round(confidence, 2),
             "source_message_id": group["source_message_id"],
+            "sender_email": group["sender_email"],
+            "flagged": group["flagged"],
+            "flag_reasons": group["flag_reasons"],
+            "invoices": sorted(group["invoices"].values(), key=lambda i: i["due_date"] or ""),
             "pdf": group["pdf"],  # bytes; scan_inbox îl scrie pe disc și îl elimină din dict
         })
     return providers

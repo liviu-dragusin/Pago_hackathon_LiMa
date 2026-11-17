@@ -4,10 +4,9 @@ export function AuthShell({ title, subtitle, children }) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-ground px-4 py-8">
       <div className="w-full max-w-[480px] space-y-4">
-        <div className="flex items-center gap-3 px-1">
-          <span className="text-lg font-bold lowercase text-[var(--accent)]">pago</span>
-          <span className="h-5 w-px bg-[var(--line)]" />
-          <span className="text-xs text-[var(--muted)]">AI Hackathon · LiMa</span>
+        <div className="flex flex-col items-center gap-3 pb-2 text-center">
+          <span className="text-6xl font-bold lowercase leading-none text-[var(--accent)]">pago</span>
+          <span className="text-sm text-[var(--muted)]">Echipa LiMa</span>
         </div>
 
         <section className="overflow-hidden rounded-[22px] border border-[var(--line)] bg-[var(--surface)] shadow-[var(--shadow)]">
@@ -19,10 +18,9 @@ export function AuthShell({ title, subtitle, children }) {
               className="pointer-events-none absolute -bottom-12 -right-12 h-44 w-44 rounded-full"
               style={{ background: 'radial-gradient(circle, rgba(255,213,74,.55), transparent 70%)' }}
             />
-            <h1 className="relative text-[clamp(26px,5.6vw,34px)] leading-[1.15]" style={{ color: 'var(--poster-yellow)' }}>
+            <h1 className="relative text-center text-[clamp(26px,5.6vw,34px)] leading-[1.15]" style={{ color: 'var(--poster-yellow)' }}>
               {title}
             </h1>
-            <p className="relative mt-2 max-w-sm text-sm font-semibold text-white/90">{subtitle}</p>
           </div>
           <div className="p-6">{children}</div>
         </section>

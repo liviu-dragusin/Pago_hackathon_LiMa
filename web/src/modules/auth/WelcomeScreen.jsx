@@ -1,13 +1,7 @@
-import { ArrowRight, Eye, Lock, ShieldCheck, Zap } from 'lucide-react'
+import { ArrowRight, Zap } from 'lucide-react'
 import { AuthShell, SecondaryButton, TextLink } from './AuthLayout'
 
-const PERKS = [
-  { icon: Eye, label: 'Doar citire' },
-  { icon: Lock, label: 'Acces revocat după scanare' },
-  { icon: ShieldCheck, label: 'Tu confirmi ce adaugi' },
-]
-
-export default function WelcomeScreen({ user, onDetect, onLater, onLogout }) {
+export default function WelcomeScreen({ user, onDetect, onManual, onLogout }) {
   return (
     <AuthShell
       title="Adu-ți furnizorii într-un singur loc"
@@ -18,18 +12,6 @@ export default function WelcomeScreen({ user, onDetect, onLater, onLogout }) {
         Conectat ca <b className="truncate font-semibold text-[var(--ink)]">{user.email}</b>
       </p>
 
-      <ul className="mt-4 flex flex-wrap gap-2">
-        {PERKS.map(({ icon: Icon, label }) => (
-          <li
-            key={label}
-            className="inline-flex items-center gap-1.5 rounded-full bg-[var(--surface-2)] px-3 py-1.5 text-xs text-[var(--muted)] ring-1 ring-[var(--line)]"
-          >
-            <Icon className="h-3.5 w-3.5 text-[var(--accent)]" />
-            {label}
-          </li>
-        ))}
-      </ul>
-
       {/* Singurul element în stil „AI” din ecran. */}
       <button type="button" onClick={onDetect} className="ai-btn mt-6">
         <Zap className="h-5 w-5" />
@@ -37,7 +19,7 @@ export default function WelcomeScreen({ user, onDetect, onLater, onLogout }) {
         <ArrowRight className="ml-auto h-5 w-5 opacity-80" />
       </button>
       <div className="mt-3">
-        <SecondaryButton onClick={onLater}>Import mai târziu</SecondaryButton>
+        <SecondaryButton onClick={onManual}>Introducere manuală a furnizorilor</SecondaryButton>
       </div>
 
       <div className="mt-5 text-center">

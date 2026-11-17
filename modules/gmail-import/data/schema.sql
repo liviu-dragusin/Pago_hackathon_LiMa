@@ -56,7 +56,21 @@ CREATE TABLE IF NOT EXISTS discovered_providers (
     iban_valid        INTEGER DEFAULT 0,
     source_message_id TEXT,
     invoice_pdf_path TEXT,                  -- relativ la data/, ex: invoices/1/3_0.pdf
+    sender_email      TEXT,                 -- adresa expeditorului facturii
+    security_flag     INTEGER DEFAULT 0,    -- 1 = expeditor în afara listei albe: posibil malițios
+    security_reasons  TEXT,                 -- JSON: lista motivelor afișate în UI
     status            TEXT NOT NULL DEFAULT 'proposed'  -- proposed | confirmed | rejected
+);
+
+-- Toate facturile găsite pentru un furnizor propus (istoricul din care se calculează predicția).
+CREATE TABLE IF NOT EXISTS discovered_invoices (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    discovered_id  INTEGER NOT NULL REFERENCES discovered_providers(id),
+    invoice_number TEXT,
+    amount         REAL NOT NULL,
+    currency       TEXT DEFAULT 'RON',
+    issued_at      TEXT,                    -- data emailului (YYYY-MM-DD)
+    due_date       TEXT
 );
 
 CREATE TABLE IF NOT EXISTS user_providers (

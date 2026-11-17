@@ -50,16 +50,8 @@ function h_pay_bill(string $id): array
 
     $pdo = db();
     $pdo->prepare('UPDATE bills SET paid_at = ? WHERE id = ?')->execute([today(), $bill['id']]);
-    [$points, $reason] = points_for_payment($bill['due_date'], today());
-    if ($points > 0) add_points($pdo, USER_ID, $points, "$reason · {$bill['provider']}", $bill['id']);
 
-    return [
-        'bill'           => find_bill($bill['id']),
-        'points_awarded' => $points,
-        'reason'         => $reason,
-        'new_badges'     => check_badges($pdo, USER_ID),
-        'rewards'        => rewards_summary($pdo, USER_ID),
-    ];
+    return ['bill' => find_bill($bill['id'])];
 }
 
 // ---------------------------------------------------------------- predicții și buget
@@ -215,7 +207,6 @@ function h_dashboard(): array
         'monthly'    => array_values($monthly),
         'prediction' => ['period' => $pred['period_next'], 'total' => $pred['total_predicted'], 'budget' => $pred['total_budget']],
         'anomalies'  => $pred['anomalies'],
-        'rewards'    => rewards_summary($pdo, USER_ID),
     ];
 }
 
@@ -296,10 +287,9 @@ function h_split_bill(string $groupId): array
         $amount = $i === 0 ? $cents - $each * (count($chosen) - 1) : $each;
         $ins->execute([$bill['id'], (int) $groupId, $m['id'], $amount / 100, $m['is_owner'] ? today() : null]);
     }
-    add_points($pdo, USER_ID, POINTS_SPLIT, "Factură împărțită · {$bill['provider']}", $bill['id']);
     $pdo->commit();
 
-    return ['new_badges' => check_badges($pdo, USER_ID)] + h_splits();
+    return h_splits();
 }
 
 function h_settle_share(string $shareId): array
@@ -314,36 +304,3 @@ function h_settle_share(string $shareId): array
     return h_splits();
 }
 
-// ---------------------------------------------------------------- recompense
-
-function h_rewards(): array
-{
-    $pdo = db();
-    $st  = $pdo->prepare('SELECT badge_code, earned_at FROM user_badges WHERE user_id = ?');
-    $st->execute([USER_ID]);
-    $earned  = array_column($st->fetchAll(), 'earned_at', 'badge_code');
-    $metrics = badge_metrics($pdo, USER_ID);
-
-    $badges = [];
-    foreach (badge_defs() as $code => $def) {
-        $badges[] = ['code' => $code] + $def + [
-            'earned_at' => $earned[$code] ?? null,
-            'current'   => min($metrics[$def['metric']], $def['threshold']),
-        ];
-    }
-
-    $ledger = $pdo->prepare('SELECT id, points, reason, bill_id, created_at FROM points_ledger WHERE user_id = ? ORDER BY created_at DESC, id DESC LIMIT 30');
-    $ledger->execute([USER_ID]);
-
-    return rewards_summary($pdo, USER_ID) + [
-        'levels'  => LEVELS,
-        'metrics' => $metrics,
-        'badges'  => $badges,
-        'ledger'  => $ledger->fetchAll(),
-        'rules'   => [
-            ['points' => 50, 'label' => 'Plată cu 3+ zile înainte de scadență'],
-            ['points' => 20, 'label' => 'Plată până la scadență'],
-            ['points' => POINTS_SPLIT, 'label' => 'Factură împărțită cu alții'],
-        ],
-    ];
-}
