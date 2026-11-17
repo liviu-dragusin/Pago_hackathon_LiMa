@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { Home, LogOut, MapPinPlus, Moon, PieChart, Receipt, Sun, Trophy, Users } from 'lucide-react'
+import { Home, LogOut, MapPinPlus, Moon, PieChart, Receipt, Sun, Users } from 'lucide-react'
 import { useTheme } from '../lib/theme'
 import { useAuth } from '../modules/auth'
 import { Assistant } from '../modules/assistant'
@@ -10,7 +10,6 @@ const NAV = [
   { to: '/furnizori', label: 'Adaugă furnizor', short: 'Furnizori', icon: MapPinPlus },
   { to: '/buget', label: 'Buget & Predicții', short: 'Buget', icon: PieChart },
   { to: '/split', label: 'Plăți split', short: 'Split', icon: Users },
-  { to: '/recompense', label: 'Recompense', short: 'Puncte', icon: Trophy },
 ]
 
 export default function Layout() {
@@ -43,7 +42,7 @@ export default function Layout() {
           <ThemeToggle wide />
           <div className="rounded-xl bg-brand-50 p-4 text-xs text-brand-900">
             <p className="font-semibold">Hackathon Pago 2026</p>
-            <p className="mt-1 text-brand-700">Echipa LiMa · prototip cu date mock</p>
+            <p className="mt-1 text-brand-700">Echipa LiMa · MVP</p>
           </div>
         </div>
       </aside>

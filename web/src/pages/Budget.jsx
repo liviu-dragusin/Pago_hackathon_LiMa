@@ -97,7 +97,7 @@ export default function Budget() {
         ['energie', 'gaz', 'intretinere'].includes(account.category) && (
           <p className="rounded-[18px] border border-dashed border-slate-300 px-5 py-4 text-sm text-slate-500">
             Pentru {account.provider}, temperatura nu explică bine factura (de exemplu, curentul crește și vara, de la aerul
-            condiționat), așa că folosim modelul sezonier.
+            condiționat), așa că folosim istoricul facturilor (regresie liniară sau sezonalitate).
           </p>
         )
       )}

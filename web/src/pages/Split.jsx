@@ -119,8 +119,7 @@ function SplitForm({ group, bills, onDone }) {
     setSaving(true)
     try {
       const res = await api.splitBill(group.id, Number(billId), members)
-      toast(`${bill.provider} împărțită în ${members.length + 1} · +10 puncte`)
-      res.new_badges.forEach((b) => toast(`Badge nou: ${b.name}!`))
+      toast(`${bill.provider} împărțită în ${members.length + 1}`)
       setBillId('')
       onDone(res)
     } catch (err) {

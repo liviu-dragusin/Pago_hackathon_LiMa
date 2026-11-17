@@ -39,10 +39,9 @@ export default function AddProviderDialog({ provider, mode, county, catalog, def
       const res = mode === 'account' ? await api.addAccount(body) : await api.createContract(body)
       toast(
         mode === 'account'
-          ? `${provider.name} adăugat · +${res.points_awarded} puncte`
-          : `Cerere de contract trimisă la ${provider.name} · +${res.points_awarded} puncte`,
+          ? `${provider.name} adăugat`
+          : `Cerere de contract trimisă la ${provider.name}`,
       )
-      res.new_badges?.forEach((b) => toast(`Badge nou: ${b.name}!`))
       onDone()
     } catch (err) {
       toast(err.message, 'error')

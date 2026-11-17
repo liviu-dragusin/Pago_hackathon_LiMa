@@ -108,11 +108,11 @@ export default function AuthGate({ children }) {
     navigate('/', { replace: true })
   }
 
-  function finishOnboarding() {
+  function finishOnboarding(path = '/') {
     writeOnboarded(user.email)
     setOnboarded(true)
     setPhase('welcome')
-    navigate('/', { replace: true })
+    navigate(path, { replace: true })
   }
 
   if (user === undefined) {
@@ -146,7 +146,7 @@ export default function AuthGate({ children }) {
       <WelcomeScreen
         user={user}
         onDetect={() => setPhase('importing')}
-        onLater={finishOnboarding}
+        onManual={() => finishOnboarding('/furnizori')}
         onLogout={logout}
       />
     )

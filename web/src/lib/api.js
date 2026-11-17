@@ -22,7 +22,6 @@ export const api = {
   splitBill: (groupId, bill_id, member_ids) =>
     request(`/splits/${groupId}/bills`, { method: 'POST', body: { bill_id, member_ids } }),
   settleShare: (shareId) => request(`/splits/shares/${shareId}/settle`, { method: 'POST' }),
-  rewards: () => request('/rewards'),
 
   // modul harta furnizorilor
   catalog: () => request('/catalog'),

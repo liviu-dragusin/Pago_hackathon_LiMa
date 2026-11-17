@@ -1,5 +1,5 @@
-import { Mail, ShieldCheck } from 'lucide-react'
-import { AuthShell, PrimaryButton, TextLink } from './AuthLayout'
+import { Mail } from 'lucide-react'
+import { AuthShell, PrimaryButton, SecondaryButton } from './AuthLayout'
 
 export default function LoginScreen({ notice, onDemo }) {
   return (
@@ -18,13 +18,8 @@ export default function LoginScreen({ notice, onDemo }) {
         Continuă cu Gmail
       </PrimaryButton>
 
-      <p className="mt-4 flex items-center gap-2 text-xs text-[var(--muted)]">
-        <ShieldCheck className="h-4 w-4 shrink-0 text-[var(--accent)]" />
-        Acces doar la citire. Tu alegi ce se adaugă în Pago.
-      </p>
-
-      <div className="mt-5 text-center">
-        <TextLink onClick={onDemo}>Intră cu un cont demo</TextLink>
+      <div className="mt-3">
+        <SecondaryButton onClick={onDemo}>Intră cu un cont demo</SecondaryButton>
       </div>
     </AuthShell>
   )

@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom'
-import { AlertTriangle, ArrowRight, Flame, Sparkles, Trophy } from 'lucide-react'
+import { AlertTriangle, ArrowRight, Sparkles } from 'lucide-react'
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import BillRow, { usePayBill } from '../components/BillRow'
-import { Card, CardTitle, ErrorBox, Loading, ProgressBar } from '../components/ui'
+import { Card, CardTitle, ErrorBox, Loading } from '../components/ui'
 import { api, useApi } from '../lib/api'
 import { CATEGORIES, monthLabel, ron } from '../lib/format'
 import { useTheme } from '../lib/theme'
@@ -15,7 +15,7 @@ export default function Dashboard() {
   if (loading) return <Loading />
   if (error) return <ErrorBox error={error} />
 
-  const { user, summary, upcoming, monthly, prediction, anomalies, rewards } = data
+  const { user, summary, upcoming, monthly, prediction, anomalies } = data
   const chartData = [...monthly, { period: prediction.period, predicted: prediction.total }]
 
   return (
@@ -63,20 +63,6 @@ export default function Dashboard() {
           danger={prediction.total > prediction.budget}
           icon={Sparkles}
         />
-        <Link to="/recompense">
-          <Card className="h-full transition hover:border-brand-300">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-slate-500">Nivel {rewards.level.name}</p>
-              <Trophy className="h-4 w-4 text-brand-500" />
-            </div>
-            <p className="mt-1 text-2xl font-bold tabular-nums">{rewards.points.toLocaleString('ro-RO')} pct</p>
-            <ProgressBar value={rewards.level.progress} className="mt-3" />
-            <p className="mt-2 flex items-center gap-1 text-xs text-slate-500">
-              <Flame className="h-3.5 w-3.5 text-orange-500" /> {rewards.streak} plăți la timp la rând
-              {rewards.level.next && <> · {rewards.level.to_next} pct până la {rewards.level.next}</>}
-            </p>
-          </Card>
-        </Link>
       </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-5">

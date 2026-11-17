@@ -17,9 +17,9 @@ import {
   Tv,
   Zap,
 } from 'lucide-react'
-import { Card, CardTitle, CategoryIcon, ErrorBox, Loading } from '../../components/ui'
+import { ErrorBox, Loading } from '../../components/ui'
 import { api, useApi } from '../../lib/api'
-import { category, shortDate } from '../../lib/format'
+import { category } from '../../lib/format'
 import AddProviderDialog from './AddProviderDialog'
 import ProviderLogo from './ProviderLogo'
 import RomaniaMap from './RomaniaMap'
@@ -45,13 +45,6 @@ const SERVICES = {
   diverse: { label: 'Altele', icon: Package },
 }
 const service = (key) => SERVICES[key] ?? { label: category(key).label, icon: Package }
-
-const CONTRACT_STATUS = {
-  trimisa: ['Trimisă', 'bg-slate-100 text-slate-700'],
-  in_analiza: ['În analiză', 'bg-amber-50 text-amber-700'],
-  aprobata: ['Aprobată', 'bg-emerald-50 text-emerald-700'],
-  respinsa: ['Respinsă', 'bg-red-50 text-red-700'],
-}
 
 const countyName = (c) => (c.code === 'B' ? 'București' : c.name)
 const countyTitle = (c) => (c.code === 'B' ? 'Municipiul București' : `Județul ${c.name}`)
@@ -187,9 +180,6 @@ export default function ProviderMapPage() {
                     <MapPin className="h-4 w-4 shrink-0 text-[var(--accent)]" />
                     <span className="truncate">{countyTitle(view.county)}</span>
                   </p>
-                  <p className="truncate text-xs text-slate-500">
-                    Regiunea {view.county.region} · energie: {view.county.electricity_dso}
-                  </p>
                 </>
               ) : (
                 <p className="text-sm text-slate-500">Niciun județ ales încă.</p>
@@ -205,7 +195,7 @@ export default function ProviderMapPage() {
       {/* ───────── Pasul 2: serviciul ───────── */}
       {step === 2 && view.county && (
         <WizardCard>
-          <StepTitle n={2} title={`Ce serviciu cauți în ${countyName(view.county)}?`} subtitle="Alege serviciul și îți arătăm furnizorii disponibili." />
+          <StepTitle n={2} title={`Ce serviciu cauți în ${countyName(view.county)}?`} />
 
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
             {data.categories.map((c) => {
@@ -330,31 +320,6 @@ export default function ProviderMapPage() {
         </WizardCard>
       )}
 
-      {data.contracts.length > 0 && (
-        <Card>
-          <CardTitle>Cererile tale de contract</CardTitle>
-          <div className="divide-y divide-slate-100">
-            {data.contracts.map((c) => {
-              const [label, cls] = CONTRACT_STATUS[c.status] ?? [c.status, 'bg-slate-100']
-              const county = data.counties.find((k) => k.code === c.county)
-              return (
-                <div key={c.id} className="flex items-center gap-3 py-3">
-                  <CategoryIcon cat={c.category} size="sm" />
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium">
-                      {c.provider_name} <span className="font-normal text-slate-500">· {service(c.category).label}</span>
-                    </p>
-                    <p className="truncate text-xs text-slate-500">
-                      {c.locality}, {county?.name} · {c.address} · trimisă {shortDate(c.created_at)}
-                    </p>
-                  </div>
-                  <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${cls}`}>{label}</span>
-                </div>
-              )
-            })}
-          </div>
-        </Card>
-      )}
 
       {dialog && (
         <AddProviderDialog

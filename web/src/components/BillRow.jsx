@@ -5,7 +5,7 @@ import { dueText, monthLabel, ron } from '../lib/format'
 import { Button, StatusBadge, useToast } from './ui'
 import ProviderLogo from '../modules/provider-map/ProviderLogo'
 
-/** Plătește o factură și afișează punctele / badge-urile câștigate. */
+/** Plătește o factură și afișează confirmarea. */
 export function usePayBill(onPaid) {
   const toast = useToast()
   const [payingId, setPayingId] = useState(null)
@@ -14,12 +14,7 @@ export function usePayBill(onPaid) {
     setPayingId(bill.id)
     try {
       const res = await api.payBill(bill.id)
-      toast(
-        res.points_awarded > 0
-          ? `${bill.provider} plătită · +${res.points_awarded} puncte`
-          : `${bill.provider} plătită (după scadență, fără puncte)`,
-      )
-      res.new_badges.forEach((b) => toast(`Badge nou: ${b.name}!`))
+      toast(`${bill.provider} plătită`)
       await onPaid?.(res)
     } catch (e) {
       toast(e.message, 'error')
