@@ -126,7 +126,7 @@ export default function ProviderMapPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className={`mx-auto space-y-6 ${step === 1 ? '' : 'max-w-5xl'}`}>
       <header className="space-y-4">
         <div>
           <h1 className="text-2xl tracking-tight">Adaugă furnizor</h1>
@@ -137,10 +137,13 @@ export default function ProviderMapPage() {
 
       {/* ───────── Pasul 1: harta ───────── */}
       {step === 1 && (
-        <WizardCard>
-          <StepTitle n={1} title="Unde locuiești?" subtitle="Apasă pe județul tău pe hartă sau alege-l din listă." />
+        // harta e vedeta pasului: ocupă toată lățimea paginii, fără padding lateral
+        // overflow-clip, nu hidden: hidden ar strica bara sticky de jos
+        <section className="overflow-clip rounded-[24px] border border-line bg-surface shadow-[var(--shadow)]">
+          <div className="flex flex-col gap-4 px-5 pt-5 sm:px-7 sm:pt-7 xl:flex-row xl:items-end xl:justify-between">
+          <StepTitle n={1} title="Unde locuiești?" subtitle="Apasă pe județul tău pe hartă sau alege-l din listă." className="mb-0" />
 
-          <div className="mb-3 flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <select
               value={countyCode ?? ''}
               onChange={(e) => setCountyCode(e.target.value || null)}
@@ -166,13 +169,15 @@ export default function ProviderMapPage() {
               </button>
             )}
           </div>
+          </div>
 
-          {/* înălțime limitată, ca butonul „Continuă” să rămână vizibil fără scroll */}
-          <div className="aspect-[10/7] max-h-[min(48vh,540px)] w-full rounded-[20px] bg-surface-2 p-2 sm:p-4">
+          {/* harta încape întreagă pe ecran, centrată: înălțimea = ecranul minus antet, pași și bara de jos */}
+          <div className="mt-5 aspect-[10/7] w-full border-y border-line bg-surface-2 px-1 py-2 sm:aspect-auto sm:h-[max(380px,calc(100dvh-430px))] sm:px-6 sm:py-5 lg:h-[max(320px,calc(100dvh-450px))] xl:h-[max(340px,calc(100dvh-400px))]">
             <RomaniaMap colors={view.colors} selected={countyCode} home={data.home_county} onSelect={setCountyCode} />
           </div>
 
-          <WizardFooter sticky>
+          {/* bara rămâne lipită jos pe ecran, deci „Continuă” e mereu la îndemână */}
+          <div className="sticky bottom-16 z-10 flex items-center justify-between gap-4 border-t border-line bg-surface/95 py-4 pl-5 pr-20 backdrop-blur sm:pl-7 lg:bottom-0 lg:pr-24">
             <div className="min-w-0">
               {view.county ? (
                 <>
@@ -188,8 +193,8 @@ export default function ProviderMapPage() {
             <PrimaryButton disabled={!view.county} onClick={() => goTo(2)}>
               Continuă <ArrowRight className="h-4 w-4" />
             </PrimaryButton>
-          </WizardFooter>
-        </WizardCard>
+          </div>
+        </section>
       )}
 
       {/* ───────── Pasul 2: serviciul ───────── */}
@@ -394,9 +399,9 @@ function WizardCard({ children }) {
   return <section className="rounded-[24px] border border-line bg-surface p-5 shadow-[var(--shadow)] sm:p-7">{children}</section>
 }
 
-function StepTitle({ n, title, subtitle }) {
+function StepTitle({ n, title, subtitle, className = 'mb-5' }) {
   return (
-    <div className="mb-5">
+    <div className={className}>
       <p className="text-xs font-semibold uppercase tracking-wider text-[var(--accent)]">Pasul {n} din 3</p>
       <h2 className="mt-1 text-[clamp(20px,2.6vw,26px)] leading-tight">{title}</h2>
       {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}

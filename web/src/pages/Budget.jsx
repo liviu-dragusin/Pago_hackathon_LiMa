@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { AlertTriangle, Pencil, Sparkles, Thermometer } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { AlertTriangle, MapPin, Pencil, Sparkles, Thermometer } from 'lucide-react'
 import {
   CartesianGrid,
   ComposedChart,
@@ -24,6 +25,34 @@ export default function Budget() {
 
   if (loading) return <Loading />
   if (error) return <ErrorBox error={error} />
+
+  // fără facturi nu avem din ce estima: arătăm ce poate face userul, nu o pagină goală
+  if (!data.accounts?.length) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Buget & Predicții" />
+        <Card className="flex flex-col items-center gap-4 py-12 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 text-brand-600">
+            <Sparkles className="h-6 w-6" />
+          </div>
+          <div className="max-w-md space-y-1">
+            <p className="text-lg font-semibold">Încă nu avem facturi din care să estimăm</p>
+            <p className="text-sm text-slate-500">
+              Importă facturile din Gmail sau adaugă un furnizor de pe hartă. După câteva luni de istoric, îți arătăm aici
+              cât va fi factura următoare și cum stai față de buget.
+            </p>
+          </div>
+          <Link
+            to="/furnizori"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-3.5 py-2 text-sm font-medium text-white transition hover:bg-brand-600/90"
+          >
+            <MapPin className="h-4 w-4" />
+            Adaugă un furnizor
+          </Link>
+        </Card>
+      </div>
+    )
+  }
 
   const over = data.total_predicted > data.total_budget
   // implicit arătăm primul cont la care vremea contează (ex. gazul)
