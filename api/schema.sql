@@ -24,7 +24,8 @@ CREATE TABLE user_providers (
     client_code TEXT NOT NULL,
     alias       TEXT,
     county      TEXT,
-    created_at  TEXT
+    created_at  TEXT,
+    source      TEXT NOT NULL DEFAULT 'manual'   -- manual | gmail (conturile gmail se înlocuiesc la fiecare import)
 );
 
 CREATE TABLE bills (
@@ -43,23 +44,6 @@ CREATE TABLE budgets (
     category      TEXT NOT NULL,
     monthly_limit REAL NOT NULL,
     PRIMARY KEY (user_id, category)
-);
-
--- Gamification
-CREATE TABLE points_ledger (
-    id         INTEGER PRIMARY KEY,
-    user_id    INTEGER NOT NULL REFERENCES users(id),
-    points     INTEGER NOT NULL,
-    reason     TEXT NOT NULL,
-    bill_id    INTEGER REFERENCES bills(id),
-    created_at TEXT NOT NULL
-);
-
-CREATE TABLE user_badges (
-    user_id    INTEGER NOT NULL REFERENCES users(id),
-    badge_code TEXT NOT NULL,         -- definițiile sunt în lib/rewards.php
-    earned_at  TEXT NOT NULL,
-    PRIMARY KEY (user_id, badge_code)
 );
 
 -- Plăți split

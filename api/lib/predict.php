@@ -6,7 +6,8 @@ declare(strict_types=1);
  *
  * - Dacă avem aceeași lună de anul trecut: model sezonier = valoarea de anul trecut × trend
  *   (trend = media ultimelor 3 luni / media acelorași 3 luni de anul trecut, limitat la 0.8–1.3).
- * - Altfel: media ultimelor 3 luni.
+ * - Altfel, cu cel puțin 3 luni: regresie liniară (cele mai mici pătrate) pe ultimele 6 luni, extrapolată o lună înainte.
+ * - Cu mai puține luni: media celor disponibile (o singură factură = aceeași sumă).
  * Intervalul (low/high) vine din variația recentă, minim ±8%.
  */
 function predict_next(array $history): ?array
@@ -31,10 +32,25 @@ function predict_next(array $history): ?array
             : 1.0;
         $amount = $lastYear * $trend;
         $method = 'sezonier';
+    } elseif (count($history) >= 3) {
+        $window = array_values(array_slice($history, -6));
+        $n      = count($window);
+        $mx     = ($n - 1) / 2;
+        $my     = avg(array_column($window, 'amount'));
+        $sxy = $sxx = 0.0;
+        foreach ($window as $i => $h) {
+            $sxy += ($i - $mx) * ($h['amount'] - $my);
+            $sxx += ($i - $mx) ** 2;
+        }
+        $slope  = $sxx > 0 ? $sxy / $sxx : 0.0;
+        $amount = $my + $slope * ($n - $mx); // valoarea dreptei la indexul n (luna următoare)
+        $amount = max($avgRecent * 0.7, min($avgRecent * 1.3, $amount)); // fără extrapolări exagerate
+        $trend  = $my > 0 ? $amount / $my : 1.0;
+        $method = 'regresie liniară';
     } else {
         $trend  = 1.0;
         $amount = $avgRecent;
-        $method = 'medie 3 luni';
+        $method = count($history) === 1 ? 'ultima factură' : 'medie ' . count($history) . ' luni';
     }
 
     $margin = max($amount * 0.08, stddev(array_column(array_slice($history, -6), 'amount')) * 0.5);
