@@ -1,0 +1,7 @@
+=== USER (2026-11-16T11:39:29.388Z) ===
+1.Cand se detecteaza facturile, vreau sa nu imi preia magazinele online (ex: Sportisimo, Douglas, nu le vreau. PAgo nu este o aplicatie destinata acestor magazine)
+
+2. Vreau ca sa preia ultima factura din mail in format PDF si sa o pot vizualiza printr-un buton in dreapta furnizorului.
+
+=== USER (2026-11-16T11:39:30.306Z) ===
+[Request interrupted by user]
