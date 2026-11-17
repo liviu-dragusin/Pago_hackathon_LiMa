@@ -1,0 +1,21 @@
+From: Enel Energie <facturi@enel.ro>
+To: demo@pago.local
+Reply-To: relatii-clienti@gmail.com
+Subject: [DEMO] Factura Enel nr. 4472110 - noiembrie 2026
+Date: Thu, 05 Nov 2026 11:20:00 +0200
+Authentication-Results: mx.google.com; spf=pass smtp.mailfrom=enel.ro; dkim=pass header.d=enel.ro; dmarc=pass header.from=enel.ro
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+
+Stimate client,
+
+Vă informăm că ne-am schimbat banca. Începând din această lună, plata se face în contul nou de mai jos.
+
+Furnizor: Enel Energie
+CUI: 13267221
+IBAN: RO17RNCB0000111122223333
+Cod client: 300412345
+Nr. factura: 4472110
+Categorie: energie
+Total de plata: 214,50 RON
+Scadenta: 2026-11-28

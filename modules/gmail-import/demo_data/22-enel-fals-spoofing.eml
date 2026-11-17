@@ -1,0 +1,20 @@
+From: Enel Energie <facturi@enel.ro>
+To: demo@pago.local
+Subject: [DEMO] URGENT: Factura Enel nr. 4471999 - noiembrie 2026
+Date: Tue, 03 Nov 2026 03:41:00 +0200
+Authentication-Results: mx.google.com; spf=softfail smtp.mailfrom=enel.ro; dkim=none; dmarc=fail (p=NONE) header.from=enel.ro
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+
+Stimate client,
+
+Factura dumneavoastră este restantă. Dacă nu achitați în 24 de ore, vom deconecta contractul.
+
+Furnizor: Enel Energie
+CUI: 13267221
+IBAN: RO50BTRL0000000000099871
+Cod client: 300412345
+Nr. factura: 4471999
+Categorie: energie
+Total de plata: 389,00 RON
+Scadenta: 2026-11-04

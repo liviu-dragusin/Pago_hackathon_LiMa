@@ -1,0 +1,20 @@
+From: Enel Energie <facturi@enel-energie-plata.example>
+To: demo@pago.local
+Subject: [DEMO] Factura Enel nr. 4472001 - noiembrie 2026
+Date: Wed, 04 Nov 2026 10:05:00 +0200
+Authentication-Results: mx.google.com; spf=pass smtp.mailfrom=enel-energie-plata.example; dkim=pass header.d=enel-energie-plata.example; dmarc=pass header.from=enel-energie-plata.example
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+
+Stimate client,
+
+Factura dumneavoastră pentru energie electrică este disponibilă. Plătiți online la:
+https://plata-securizata.example/enel/4472001
+
+Furnizor: Enel Energie
+IBAN: RO52INGB0000999900123456
+Cod client: 300412345
+Nr. factura: 4472001
+Categorie: energie
+Total de plata: 214,50 RON
+Scadenta: 2026-11-28
